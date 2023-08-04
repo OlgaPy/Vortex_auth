@@ -17,11 +17,6 @@ def error_handler(error: Exception):
         return UnknownError()
 
 
-@app.get("/")
-def main():
-    return "Ok", 200
-
-
 if __name__ == '__main__':
     host = os.getenv("APP_HOST", "0.0.0.0")
     port = int(os.getenv("APP_PORT", 80))
