@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  auth:
+    image: auth:latest
+    restart: unless-stopped
+    ports:
+      - "3333:80"
+    env_file:
+      - .env
+    volumes:
+      - ./config.yaml:/app/config.yaml
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=auth
+      - POSTGRES_PASSWORD=postgres
