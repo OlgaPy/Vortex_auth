@@ -1,9 +1,12 @@
 import os
 
 import flask
+
 from models.errors import AppException, UnknownError
+from routes import api_routes
 
 app = flask.Flask(__name__)
+app.register_blueprint(api_routes)
 
 
 @app.errorhandler(Exception)
