@@ -2,11 +2,12 @@
 
 from services import AuthService, UserService
 from config import config
+from .connections import ConnectionManager
 
 
 def auth_service() -> AuthService:
-    return AuthService()
+    return AuthService(ConnectionManager().session)
 
 
 def user_service() -> UserService:
-    return UserService()
+    return UserService(ConnectionManager().session)
