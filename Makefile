@@ -1,2 +1,2 @@
 build:
-	docker image build -t auth:${cat version.txt}
+	docker image build -t auth:${cat version.txt} .

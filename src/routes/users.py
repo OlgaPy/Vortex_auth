@@ -1,10 +1,12 @@
 from http import HTTPStatus
 
-from flask import Blueprint
+from flask import Blueprint, request, jsonify
+
+from injectors.services_inj import user_service
 
 __all__ = ['router']
 
-router = Blueprint("users", "users", url_prefix="users")
+router = Blueprint("users", "users", url_prefix="/users")
 
 """
 Example:
@@ -33,7 +35,30 @@ def get_users():
 def create_user():
     """Создание пользователя"""
 
-    return "", HTTPStatus.IM_A_TEAPOT
+    service = user_service()
+    data = request.json
+    if not isinstance(data, dict):
+        return "wrong data", 400
+
+    user_login = data.get("login")
+    if user_login is None:
+        return "wrong data", 400
+
+    user_password = data.get("password")
+    if user_password is None:
+        return "wrong data", 400
+
+    user = service.create_user(user_login, user_password)
+
+    return jsonify({
+        "id": user.id,
+        "login": user.login,
+        "access": user.access,
+        "created_at": user.created_at,
+        "updated_at": user.updated_at,
+        "deleted_at": user.deleted_at,
+    })
+
 
 
 @router.get("/<user_id>")
