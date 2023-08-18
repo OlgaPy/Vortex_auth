@@ -1,0 +1,47 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+        args:
+          - --assume-in-merge
+      - id: check-toml
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args:
+          - --allow-missing-credentials
+  - repo: https://github.com/ambv/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        language: python
+        language_version: python3.11
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        language: python
+        exclude: /migrations/
+        args:
+          - --max-complexity=10
+          - --max-line-length=90
+          - --max-cognitive-complexity=10
+          - --ignore=E203,W503,D100,D104,D105,D106
+          - --per-file-ignores=*/tests/*:D101,D102,D103,apps.py,choices.py,admin.py:D101
+        additional_dependencies: [
+          'flake8-cognitive-complexity==0.1.0',
+          'flake8-docstrings==1.7.0',
+          'flake8-functions==0.0.8',
+          'flake8-print==5.0.0',
+          'flake8-pytest==1.4',
+          'flake8-variables-names==0.0.6',
+          'flake8-bugbear==23.7.10'
+        ]
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
