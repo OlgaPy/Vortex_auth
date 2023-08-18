@@ -43,3 +43,4 @@ default:
   image: python:3.11-slim-buster
   before_script:
     - pip install -r requirements.txt
+    - apt update && apt install gcc -y
