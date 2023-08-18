@@ -27,7 +27,7 @@ tests:
 linters:
   stage: tests & linters
   script:
-    - apt update && apt install git -y
+    - apt install git -y
     - pre-commit run -a
 
 variables:
@@ -42,5 +42,6 @@ default:
     - kapibara
   image: python:3.11-slim-buster
   before_script:
+    - apt update
+    - apt install gcc -y
     - pip install -r requirements.txt
-    - apt update && apt install gcc -y
