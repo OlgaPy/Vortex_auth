@@ -1,0 +1,45 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'
+
+stages:
+  - tests & linters
+
+cache:
+    paths:
+      - ~/.cache/pip/
+
+tests:
+  stage: tests & linters
+  services:
+    - postgres:15.3
+  script:
+    - pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit: report.xml
+
+linters:
+  stage: tests & linters
+  script:
+    - apt update && apt install git -y
+    - pre-commit run -a
+
+variables:
+  POSTGRES_DB: "auth"
+  POSTGRES_USER: "auth"
+  POSTGRES_PASSWORD: "auth"
+  DATABASE_URL: "psql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+
+default:
+  tags:
+    - backend
+    - kapibara
+  image: python:3.11-slim-buster
+  before_script:
+    - pip install -r requirements.txt
