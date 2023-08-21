@@ -6,24 +6,24 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session as DbSession
 
 from models import errors
-from models.users import User, Solt, Session, TokenPayload
+from models.users import Session, Solt, TokenPayload, User
 from tools.passwords import password_hash
 
 
 class AuthService:
-    """Сервис авторизации"""
+    """Сервис авторизации."""
 
     def __init__(self, session: DbSession):
         self._db = session
 
     def check_password(self, user: User, password: str) -> bool:
-        """Проверка совпадения пароля с паролем пользователя"""
+        """Проверка совпадения пароля с паролем пользователя."""
 
         solt = self._db.get(Solt, user.id)
         return user.password == password_hash(password, solt.solt)
 
     def login(self, login: str, password: str) -> Session:
-        """Логин пользователя и получение токена доступа"""
+        """Логин пользователя и получение токена доступа."""
 
         query = sa.select(User).where(User.login == login)
         user: User = self._db.execute(query).scalar_one_or_none()
@@ -35,10 +35,7 @@ class AuthService:
 
         sid = token_hex(32)
         token_payload = TokenPayload(
-            sid=sid,
-            user_id=user.id,
-            username=user.login,
-            access=user.access
+            sid=sid, user_id=user.id, username=user.login, access=user.access
         )
 
         token = jwt.encode({"payload": token_payload}, "kapibara", algorithm="HS256")

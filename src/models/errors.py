@@ -1,13 +1,12 @@
-from typing import ClassVar, Mapping, Iterable, Any
 from abc import ABC
 from http import HTTPStatus
+from typing import Any, ClassVar, Iterable, Mapping
 
-
-__all__ = ['AppException', 'UnknownError']
+__all__ = ["AppException", "UnknownError"]
 
 
 class AppException(Exception, ABC):
-    """Базовая ошибка приложения"""
+    """Базовая ошибка приложения."""
 
     http_code: ClassVar[int]
     err_code: ClassVar[str]
@@ -20,35 +19,31 @@ class AppException(Exception, ABC):
 
     @classmethod
     def to_dict(cls) -> dict[str, Any]:
-        return dict(
-            message=cls.msg,
-            error_code=cls.err_code,
-            data=cls.data
-        )
+        return dict(message=cls.msg, error_code=cls.err_code, data=cls.data)
 
 
 class UnknownError(AppException):
-    """Неизвестная ошибка"""
+    """Неизвестная ошибка."""
 
     http_code = HTTPStatus.INTERNAL_SERVER_ERROR
     err_code = "unknown_error"
 
 
 class NotFound(AppException):
-    """Сущность не найдена"""
+    """Сущность не найдена."""
 
     http_code = HTTPStatus.NOT_FOUND
     err_code = "not_found"
 
 
 class UserNotFound(NotFound):
-    """Сущность не найдена"""
+    """Сущность не найдена."""
 
     err_code = "user_not_found"
 
 
 class Forbidden(AppException):
-    """Доступ запрещен"""
+    """Доступ запрещен."""
 
     http_code = HTTPStatus.FORBIDDEN
     err_code = "forbidden"
