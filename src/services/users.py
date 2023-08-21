@@ -1,25 +1,25 @@
-from models import User
-from hashlib import md5
 from datetime import datetime
-import jwt
 
-from sqlalchemy.orm import Session as DbSession
-import sqlalchemy as sa
-
-from models.users import User, Solt, Session, TokenPayload
-from models import errors
-from tools.passwords import password_hash
+# from hashlib import md5
 from secrets import token_hex
+
+# import jwt
+# import sqlalchemy as sa
+from sqlalchemy.orm import Session as DbSession
+
+# from models import User, errors
+from models.users import Solt, User  # , TokenPayload, Session
+from tools.passwords import password_hash
 
 
 class UserService:
-    """Сервис управления пользователями"""
+    """Сервис управления пользователями."""
 
     def __init__(self, session: DbSession):
         self._db = session
 
     def create_user(self, login: str, password: str) -> User:
-        """Создание нового пользователя"""
+        """Создание нового пользователя."""
 
         solt_str = token_hex(8)
 
@@ -41,21 +41,21 @@ class UserService:
         return user
 
     def get_user(self, user_id: str) -> User:
-        """Получение пользователя по id"""
+        """Получение пользователя по id."""
 
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_users(self, page: int) -> list[User]:
-        """Получение пользователя по id"""
+        """Получение пользователя по id."""
 
-        raise NotImplemented
+        raise NotImplementedError
 
     def edit_user(self, login: str, password: str, email: str) -> User:
-        """Редактирование пользователя"""
+        """Редактирование пользователя."""
 
-        raise NotImplemented
+        raise NotImplementedError
 
     def delete_user(self, user_id: str) -> User:
-        """Удаление пользователя"""
+        """Удаление пользователя."""
 
-        raise NotImplemented
+        raise NotImplementedError

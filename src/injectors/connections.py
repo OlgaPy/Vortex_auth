@@ -1,7 +1,7 @@
-"""Инъекторы подключений (БД)"""
+"""Инъекторы подключений (БД)."""
 
-from sqlalchemy import create_engine, URL, Connection
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy import URL, create_engine
+from sqlalchemy.orm import Session
 
 from models.users import Table
 
@@ -13,15 +13,16 @@ def make_engine():
         port=5432,
         username="postgres",
         password="postgres",
-        database="auth"
+        database="auth",
     )
     return create_engine(url)
 
 
 # TODO: сделать правильный менеджмент подключениями
 class ConnectionManager:
+    """Класс отвечающий за подключения к БД."""
 
-    INSTANCE: 'ConnectionManager' = None
+    INSTANCE: "ConnectionManager" = None
 
     def __new__(cls, *args, **kwargs):
         if cls.INSTANCE is None:

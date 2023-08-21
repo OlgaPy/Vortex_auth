@@ -3,11 +3,11 @@ import os
 from pydantic import BaseModel
 from yaml import safe_load
 
-__all__ = ['config', 'Config']
+__all__ = ["config", "Config"]
 
 
 class Config(BaseModel):
-    """Конфиг сервиса"""
+    """Конфиг сервиса."""
 
 
 _config_path = os.getenv("CONFIG_PATH", "./config.yaml")

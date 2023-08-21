@@ -2,26 +2,22 @@ from datetime import datetime
 from typing import TypedDict
 
 import sqlalchemy as sa
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    relationship
-)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-__all__ = ['Table', 'User', 'Solt', 'Session', 'TokenPayload']
+__all__ = ["Table", "User", "Solt", "Session", "TokenPayload"]
 
 
 class Table(DeclarativeBase):
-    """Таблица"""
+    """Таблица."""
 
 
 class User(Table):
-    """Модель пользователя"""
+    """Модель пользователя."""
 
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(sa.String(64), primary_key=True)
+    # NOTE: `id` is not allowed as it shadows builtin
+    user_id: Mapped[str] = mapped_column(sa.String(64), primary_key=True)
     login: Mapped[str] = mapped_column(sa.String(64), nullable=False, unique=True)
     password: Mapped[str] = mapped_column(sa.String(32), nullable=False)
     access: Mapped[int] = mapped_column(default=0, nullable=False)
@@ -31,16 +27,18 @@ class User(Table):
 
 
 class Solt(Table):
-    """Соль для хеширования паролей"""
+    """Соль для хеширования паролей."""
 
     __tablename__ = "solt"
 
-    user_id: Mapped[str] = mapped_column(sa.ForeignKey("users.id", ondelete="cascade"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.ForeignKey("users.id", ondelete="cascade"), primary_key=True
+    )
     solt: Mapped[str] = mapped_column(sa.String(16), nullable=False)
 
 
 class Session(Table):
-    """Модель сессии"""
+    """Модель сессии."""
 
     __tablename__ = "sessions"
 
@@ -55,7 +53,7 @@ class Session(Table):
 
 
 class TokenPayload(TypedDict):
-    """Полезная нагрузка токена"""
+    """Полезная нагрузка токена."""
 
     sid: str
     user_id: str
