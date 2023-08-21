@@ -1,17 +1,17 @@
 from http import HTTPStatus
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 
 from injectors.services_inj import auth_service
 
-__all__ = ['router']
+__all__ = ["router"]
 
 router = Blueprint("auth", "auth", url_prefix="/auth")
 
 
 @router.post("/login")
 def login():
-    """Логин пользователя"""
+    """Логин пользователя."""
 
     service = auth_service()
     data = request.json
@@ -28,21 +28,18 @@ def login():
 
     session = service.login(user_login, user_password)
 
-    return jsonify({
-        "sid": session.sid
-    })
+    return jsonify({"sid": session.sid})
 
 
 @router.post("/logout")
 def logout():
-    """Выход из системы"""
+    """Выход из системы."""
 
     return "", HTTPStatus.IM_A_TEAPOT
 
 
 @router.post("/refresh")
 def refresh():
-    """Обновление токена"""
+    """Обновление токена."""
 
     return "", HTTPStatus.IM_A_TEAPOT
-

@@ -1,7 +1,8 @@
-"""Инъекторы сервисов"""
+"""Инъекторы сервисов."""
 
+# from config import config
 from services import AuthService, UserService
-from config import config
+
 from .connections import ConnectionManager
 
 
