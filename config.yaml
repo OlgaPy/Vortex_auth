@@ -1,7 +1,7 @@
 BASE: &base
   DEBUG: false
 
-DEV: 
+DEV:
   <<: *base
   DEBUG: true
 

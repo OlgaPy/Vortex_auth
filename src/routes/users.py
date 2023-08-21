@@ -1,10 +1,10 @@
 from http import HTTPStatus
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 
 from injectors.services_inj import user_service
 
-__all__ = ['router']
+__all__ = ["router"]
 
 router = Blueprint("users", "users", url_prefix="/users")
 
@@ -26,14 +26,14 @@ def get_users():
 
 @router.get("/")
 def get_users():
-    """Получение списка пользователей"""
+    """Получение списка пользователей."""
 
     return "", HTTPStatus.IM_A_TEAPOT
 
 
 @router.post("/")
 def create_user():
-    """Создание пользователя"""
+    """Создание пользователя."""
 
     service = user_service()
     data = request.json
@@ -50,33 +50,34 @@ def create_user():
 
     user = service.create_user(user_login, user_password)
 
-    return jsonify({
-        "id": user.id,
-        "login": user.login,
-        "access": user.access,
-        "created_at": user.created_at,
-        "updated_at": user.updated_at,
-        "deleted_at": user.deleted_at,
-    })
-
+    return jsonify(
+        {
+            "id": user.id,
+            "login": user.login,
+            "access": user.access,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+            "deleted_at": user.deleted_at,
+        }
+    )
 
 
 @router.get("/<user_id>")
 def get_user(user_id: str):
-    """Получение пользователя по id"""
+    """Получение пользователя по id."""
 
     return "", HTTPStatus.IM_A_TEAPOT
 
 
 @router.route("/<user_id>", methods=["PUT", "PATCH"])
 def edit_user(user_id: str):
-    """Редактирование пользователя по id"""
+    """Редактирование пользователя по id."""
 
     return "", HTTPStatus.IM_A_TEAPOT
 
 
 @router.delete("/<user_id>")
 def delete_user(user_id: str):
-    """Удаление пользователя по id"""
+    """Удаление пользователя по id."""
 
     return "", HTTPStatus.IM_A_TEAPOT
