@@ -5,20 +5,23 @@ services:
     build: .
     restart: unless-stopped
     depends_on:
-      - db
-    ports:
-      - "3333:80"
+      - kapibara-auth-db
     env_file:
       - .env
-    environment:
-      - CONFIG_PATH=/app/config.yaml
+    ports:
+      - "3333:3333"
     volumes:
       - .:/app
 
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=auth
-      - POSTGRES_PASSWORD=postgres
+  kapibara-auth-db:
+    image: postgres:15.3
+    env_file:
+      - .env
+    restart: unless-stopped
     ports:
-      - 5431:5432
+      - "54322:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

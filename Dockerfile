@@ -1,16 +1,15 @@
 FROM python:3.11-slim-buster
 
-ARG BUILD_DEPENDENCES=gcc
+ARG user=kapibara
 
-ADD requirements.txt /tmp/requirements.txt
-RUN set -e; \
-    apt update; \
-    apt install -y ${BUILD_DEPENDENCES}; \
-    pip install -r /tmp/requirements.txt; \
-    apt purge --autoremove -y ${BUILD_DEPENDENCES}; \
-    rm -rf /var/lib/apt/lists/*;
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt && \
+    rm -rf /var/lib/apt/lists/* && \
+    useradd -U $user
 
-ADD . /app
-WORKDIR /app/src
+USER $user:$user
 
-CMD ["uwsgi", "--ini", "../uwsgi.ini"]
+WORKDIR /app
+COPY ./app ./
+
+CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "3333"]

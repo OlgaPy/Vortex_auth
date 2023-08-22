@@ -1,9 +1,0 @@
-BASE: &base
-  DEBUG: false
-
-DEV:
-  <<: *base
-  DEBUG: true
-
-PROD:
-  <<: *base
