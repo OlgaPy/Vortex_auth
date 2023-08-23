@@ -10,3 +10,8 @@ Apply migrations
 ```
 alembic upgrade head
 ```
+
+Reset DB to zero
+```
+alembic downgrade base
+```
