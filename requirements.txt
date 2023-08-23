@@ -5,6 +5,7 @@ pydantic-settings==2.0.3
 SQLAlchemy==2.0.20
 alembic==1.11.3
 psycopg2-binary==2.9.7
+email-validator
 
 # dev dependencies
 factory_boy==3.3.0
