@@ -72,7 +72,7 @@ async def register(user_in: user_schema.UserCreate, db: Session = Depends(deps.g
         username=user.username,
         email=user.email,
         access_token=await generate_jwt_access_token(user),
-        refresh_token=await generate_jwt_refresh_token(user),
+        refresh_token=await generate_jwt_refresh_token(db=db, user=user),
     )
 
 
