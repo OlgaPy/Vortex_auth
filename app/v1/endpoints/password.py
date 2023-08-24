@@ -10,4 +10,5 @@ def reset():
 
 @router.post("/confirm")
 def confirm():
-    ...
+    # NOTE: Working on it
+    pass
