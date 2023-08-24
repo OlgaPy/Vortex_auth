@@ -51,6 +51,13 @@ class User(UserInDbBase):
     email: str
 
 
+class UserWithJWT(User):
+    """Uswr with JWT tokens."""
+
+    access_token: str
+    refresh_token: str
+
+
 class UserCreateOnMonolith(BaseModel):
     """Data to be sent to monolith."""
 
