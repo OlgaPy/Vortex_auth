@@ -1,3 +1,4 @@
+import logging
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,6 +11,7 @@ from app.external.exceptions import MonolithUserCreateException
 from app.schemas import user_schema
 from app.schemas.response_schema import HTTPResponse
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -43,12 +45,14 @@ async def register(user_in: user_schema.UserCreate, db: Session = Depends(deps.g
     - **password** - Пароль
     """
     if await crud_user.get_by_email(db, user_in.email):
+        logger.info("User with email %s already exists", user_in.email)
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Пользователь с таким email уже зарегистрирован.",
         )
 
     if await crud_user.get_by_username(db, user_in.username):
+        logger.info("User with username %s already exists", user_in.username)
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Пользователь с таким логином уже зарегистрирован.",
@@ -62,6 +66,7 @@ async def register(user_in: user_schema.UserCreate, db: Session = Depends(deps.g
             detail="Не удалось зарегистрировать пользователя.",
         )
     # TODO: create confirmation code and send to email
+    logger.debug("User %s registered successfully", user_in.username)
     return user_schema.UserWithJWT(
         uuid=user.uuid,
         username=user.username,

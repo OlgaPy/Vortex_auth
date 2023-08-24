@@ -1,4 +1,5 @@
 import datetime
+import logging
 import uuid
 
 from pydantic import EmailStr
@@ -8,6 +9,8 @@ from app.core.utils import generate_hashed_password
 from app.external.monolith import create_user_on_monolith
 from app.models.user import User
 from app.schemas import user_schema
+
+logger = logging.getLogger(__name__)
 
 
 async def create_user(db: Session, user: user_schema.UserCreate) -> User:
@@ -33,7 +36,9 @@ async def create_user_and_sync_to_monolith(
         db_user.synced_at = datetime.datetime.now()
     except Exception:
         db.rollback()
+        logger.exception("Can't create user %s on monolith", user.username)
         raise
+    logger.info("User %s synced to the monolith", user.username)
     db.commit()
     return db_user
 

@@ -33,6 +33,6 @@ def create_user_on_monolith(*, user: User):
         timeout=10,
     )
     if result.status_code == status_codes.codes.BAD_REQUEST:
-        raise MonolithUserCreateException("dd")
+        raise MonolithUserCreateException(f"Error {result.content}")
     if not result.ok:
         result.raise_for_status()
