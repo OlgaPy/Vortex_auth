@@ -5,10 +5,14 @@ pydantic-settings==2.0.3
 SQLAlchemy==2.0.20
 alembic==1.11.3
 psycopg2-binary==2.9.7
-email-validator
+email-validator==2.0.0.post2
+requests==2.31.0
+tenacity==8.2.3
+bcrypt==4.0.1
 
 # dev dependencies
 factory_boy==3.3.0
 pytest==7.4.0
 pytest-cov==4.1.0
 pre-commit==3.3.3
+ipython==8.14.0
