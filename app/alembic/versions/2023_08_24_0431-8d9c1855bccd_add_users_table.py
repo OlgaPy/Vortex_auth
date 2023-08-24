@@ -1,8 +1,8 @@
-"""added users table
+"""Add users table
 
-Revision ID: 8da739719f87
+Revision ID: 8d9c1855bccd
 Revises:
-Create Date: 2023-08-23 03:07:57.284368
+Create Date: 2023-08-24 04:31:29.683923
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ from alembic import op
 import app
 
 # revision identifiers, used by Alembic.
-revision: str = "8da739719f87"
+revision: str = "8d9c1855bccd"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,9 +24,9 @@ def upgrade() -> None:
     op.create_table(
         "user",
         sa.Column("uuid", app.db.base_class.GUID(), nullable=False),
-        sa.Column("username", sa.String(length=64), nullable=False),
+        sa.Column("username", sa.String(length=16), nullable=False),
         sa.Column("email", sa.String(length=255), nullable=False),
-        sa.Column("password", sa.String(length=32), nullable=False),
+        sa.Column("password", sa.String(length=72), nullable=False),
         sa.Column("email_activated_at", sa.DateTime(), nullable=True),
         sa.Column("telegram_activated_at", sa.DateTime(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False),
@@ -34,6 +34,7 @@ def upgrade() -> None:
             "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.Column("synced_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("uuid"),
     )

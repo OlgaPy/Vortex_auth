@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings
 
@@ -9,12 +7,15 @@ class Settings(BaseSettings):
 
     debug: bool = True
     title: str = "Kapibara Auth Service API"
-    version: str = "0.0.1"
-    db_uri: Optional[PostgresDsn] = None
+    version: str = "0.0.1-beta"
+    db_uri: PostgresDsn | None = None
     postgres_user: str
     postgres_password: str
     postgres_server: str
     postgres_db: str
+    monolith_host: str
+    monolith_internal_token_header: str
+    monolith_internal_token: str
 
 
 settings = Settings()
