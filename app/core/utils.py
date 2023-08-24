@@ -3,9 +3,10 @@ import uuid
 
 import bcrypt
 import jwt
+from sqlalchemy.orm import Session
 
 from app.core.settings import settings
-from app.models.user import User
+from app.models.user import User, UserSession
 from app.schemas.response_schema import AccessToken, RefreshToken
 
 
@@ -40,14 +41,18 @@ async def generate_jwt_access_token(user: User) -> str:
     )
 
 
-async def generate_jwt_refresh_token(user: User) -> str:
+async def generate_jwt_refresh_token(*, db: Session, user: User) -> str:
     """Generate refresh token and add into database for tracking purposes."""
+    # FIXME: this should go to separate helper and accept useragent/ip
+    user_session = UserSession(user=user, ip="100.00.00.00", useragent="test")
+    db.add(user_session)
+    db.commit()
     token = RefreshToken(
         exp=datetime.datetime.now()
         + datetime.timedelta(days=settings.jwt_refresh_token_lifetime_days),
         iss=settings.jwt_issuer,
         aud=settings.jwt_audience,
-        jti=uuid.uuid4().hex,
+        jti=str(user_session.uuid),
         user_id=str(user.uuid),
     )
     return jwt.encode(
