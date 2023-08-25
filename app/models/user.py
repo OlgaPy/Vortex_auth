@@ -41,7 +41,7 @@ class UserSession(BaseTable):
     user_uuid: Mapped[UUID] = mapped_column(sa.ForeignKey("user.uuid"))
     user: Mapped["User"] = relationship(back_populates="sessions")
     ip: Mapped[str] = mapped_column(sa.String(15), nullable=False)
-    useragent: Mapped[str] = mapped_column(sa.Text(), nullable=False)
+    useragent: Mapped[str] = mapped_column(sa.Text(), nullable=True)
     last_activity: Mapped[datetime] = mapped_column(
         nullable=False, server_default=sa.func.now()
     )
