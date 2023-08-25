@@ -1,11 +1,16 @@
 import logging
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app import deps
-from app.core.utils import generate_jwt_access_token, generate_jwt_refresh_token
+from app.core.utils import (
+    create_user_session,
+    generate_jwt_access_token,
+    generate_jwt_refresh_token,
+)
 from app.crud import crud_user
 from app.external.exceptions import MonolithUserCreateException
 from app.schemas import user_schema
@@ -35,7 +40,12 @@ router = APIRouter()
         },
     },
 )
-async def register(user_in: user_schema.UserCreate, db: Session = Depends(deps.get_db)):
+async def register(
+    user_in: user_schema.UserCreate,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    user_agent: Annotated[str | None, Header()] = None,
+):
     """Регистрирует пользователя в базе Auth service и отправляет его на монолит.
 
     - **username** - Имя пользователя, длиной 4-16 символов. Разрешены только буквы
@@ -66,13 +76,16 @@ async def register(user_in: user_schema.UserCreate, db: Session = Depends(deps.g
             detail="Не удалось зарегистрировать пользователя.",
         )
     # TODO: create confirmation code and send to email
+    user_session = await create_user_session(
+        db=db, user=user, request=request, user_agent=user_agent
+    )
     logger.debug("User %s registered successfully", user_in.username)
     return user_schema.UserWithJWT(
         uuid=user.uuid,
         username=user.username,
         email=user.email,
         access_token=await generate_jwt_access_token(user),
-        refresh_token=await generate_jwt_refresh_token(db=db, user=user),
+        refresh_token=await generate_jwt_refresh_token(user=user, jti=user_session.uuid),
     )
 
 
