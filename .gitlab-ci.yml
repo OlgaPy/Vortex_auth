@@ -16,6 +16,9 @@ tests:
   services:
     - postgres:15.3
   script:
+    - env
+    - ls -la
+    - pwd
     - pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
     # to not fail a build if artifacts didn't get generated
     - touch coverage.xml report.xml
