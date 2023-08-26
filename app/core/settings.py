@@ -7,7 +7,7 @@ class Settings(BaseSettings):
 
     debug: bool = True
     title: str = "Kapibara Auth Service API"
-    version: str = "0.0.1-beta"
+    version: str = "0.0.1-alpha"
     db_uri: PostgresDsn | None = None
     postgres_user: str
     postgres_password: str
@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     jwt_refresh_token_lifetime_days: int = 365
     jwt_issuer: str = "KapibaraAuth"
     jwt_audience: str = "KapibaraUsers"
+    default_email_from: str = "no-reply@kapi.bar"
+    smtp_username: str
+    smtp_password: str
+    smtp_host: str
+    smtp_port: int
 
 
 settings = Settings()
