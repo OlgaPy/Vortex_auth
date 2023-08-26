@@ -3,20 +3,23 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'
 
 stages:
+  - docker build
   - tests & linters
 
 cache:
     paths:
       - ~/.cache/pip/
+build:
+  stage: docker build
+  script:
+    docker build -t kapibara/auth:$CI_COMMIT_SHORT_SHA .
 
 tests:
-  variables:
-    PYTHONPATH: $CI_PROJECT_PATH
-    POSTGRES_SERVER: postgres
   stage: tests & linters
   services:
     - postgres:15.3
   script:
+    - docker run -e POSTGRES_SERVER=host.docker.internal:5432 kapibara/auth:$CI_COMMIT_SHORT_SHA pytest
     - pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
     # to not fail a build if artifacts didn't get generated
     - touch coverage.xml report.xml
@@ -36,10 +39,11 @@ linters:
     - pre-commit run -a
 
 variables:
+  PYTHONPATH: $CI_PROJECT_PATH
   POSTGRES_DB: "auth"
   POSTGRES_USER: "auth"
   POSTGRES_PASSWORD: "auth"
-  DATABASE_URL: "psql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+  POSTGRES_SERVER: postgres:5432
 
 default:
   tags:
