@@ -9,24 +9,24 @@ class Settings(BaseSettings):
     title: str = "Kapibara Auth Service API"
     version: str = "0.0.1-alpha"
     db_uri: PostgresDsn | None = None
-    postgres_user: str
-    postgres_password: str
-    postgres_server: str
-    postgres_db: str
-    monolith_host: str
-    monolith_internal_token_header: str
-    monolith_internal_token: str
-    jwt_rsa_private_key: str
-    jwt_rsa_public_key: str
+    postgres_user: str | None = None
+    postgres_password: str | None = None
+    postgres_server: str | None = None
+    postgres_db: str | None = None
+    monolith_host: str | None = None
+    monolith_internal_token_header: str | None = None
+    monolith_internal_token: str | None = None
+    jwt_rsa_private_key: str | None = None
+    jwt_rsa_public_key: str | None = None
     jwt_access_token_lifetime_minutes: int = 5
     jwt_refresh_token_lifetime_days: int = 365
     jwt_issuer: str = "KapibaraAuth"
     jwt_audience: str = "KapibaraUsers"
     default_email_from: str = "no-reply@kapi.bar"
-    smtp_username: str
-    smtp_password: str
-    smtp_host: str
-    smtp_port: int
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int | None = None
 
 
 settings = Settings()

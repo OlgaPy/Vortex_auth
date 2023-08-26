@@ -10,11 +10,13 @@ cache:
       - ~/.cache/pip/
 
 tests:
+  variables:
+    PYTHONPATH: $CI_PROJECT_PATH
   stage: tests & linters
   services:
     - postgres:15.3
   script:
-    - cd app && pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
+    - pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
     # to not fail a build if artifacts didn't get generated
     - touch coverage.xml report.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
