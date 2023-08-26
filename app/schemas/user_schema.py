@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, EmailStr, constr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, constr, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
 
 UsernameStr = constr(
@@ -38,10 +38,9 @@ class UserUpdate(UserBase):
 class UserInDbBase(UserBase):
     """Base model for database representation of a user."""
 
-    uuid: uuid.UUID
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    uuid: uuid.UUID
 
 
 class User(UserInDbBase):

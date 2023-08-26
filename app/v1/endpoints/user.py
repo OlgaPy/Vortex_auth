@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
+from tenacity import RetryError
 
 from app import deps
 from app.core.utils.security import (
@@ -70,7 +71,7 @@ async def register(
 
     try:
         user = await crud_user.create_user_and_sync_to_monolith(db=db, user=user_in)
-    except MonolithUserCreateException:
+    except (MonolithUserCreateException, RetryError):
         raise HTTPException(
             status_code=HTTPStatus.BAD_GATEWAY,
             detail="Не удалось зарегистрировать пользователя.",

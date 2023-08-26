@@ -1,15 +1,16 @@
 from typing import Generator
 
 import pytest
-from core.settings import settings
-from db.base_class import BaseTable
-from deps import get_db
 from fastapi.testclient import TestClient
-from main import app
 from pydantic import PostgresDsn
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy_utils import create_database, database_exists
+
+from app.core.settings import settings
+from app.db.base_class import BaseTable
+from app.deps import get_db
+from app.main import app
 
 
 @pytest.fixture(scope="session")
