@@ -5,7 +5,7 @@ import uuid
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
-from app.core.utils import generate_hashed_password
+from app.core.utils.security import generate_hashed_password
 from app.external.monolith import create_user_on_monolith
 from app.models.user import User
 from app.schemas import user_schema
@@ -28,7 +28,7 @@ async def create_user_and_sync_to_monolith(
         uuid=uuid.uuid4(),
         username=user.username,
         email=user.email,
-        password=generate_hashed_password(user.password),
+        password=await generate_hashed_password(user.password),
     )
     db.add(db_user)
     try:

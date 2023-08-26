@@ -6,16 +6,15 @@ import boto3
 from pydantic import EmailStr
 
 from app.core.settings import settings
+from app.schemas.email_schema import EmailAddress
 
-EmailAddress = EmailStr | list[EmailStr]
 
-
-def send_email_via_ses(
+async def send_email_via_ses(
     sender: EmailStr,
     to: EmailAddress,
     subject: str,
     message: str,
-    message_html: str | None = None,
+    html_message: str | None = None,
     cc: EmailAddress | None = None,
     bcc: EmailAddress | None = None,
 ):
@@ -44,18 +43,18 @@ def send_email_via_ses(
     if bcc:
         email_params["Destination"]["BccAddresses"] = bcc
 
-    if message_html:
-        email_params["Message"]["Body"] = {"Html": {"Data": message_html}}
+    if html_message:
+        email_params["Message"]["Body"] = {"Html": {"Data": html_message}}
 
     ses.send_email(**email_params)
 
 
-def send_email(
+async def send_email(
     sender: EmailStr,
     to: EmailAddress,
     subject: str,
     message: str,
-    message_html: str | None = None,
+    html_message: str | None = None,
     cc: EmailAddress | None = None,
     bcc: EmailAddress | None = None,
 ):
@@ -78,8 +77,8 @@ def send_email(
         email["Bcc"] = ",".join(bcc)
 
     email.attach(MIMEText(message, "plain"))
-    if message_html:
-        email.attach(MIMEText(message_html, "html"))
+    if html_message:
+        email.attach(MIMEText(html_message, "html"))
 
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as smtp:
         smtp.starttls()

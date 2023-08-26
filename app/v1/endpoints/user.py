@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app import deps
-from app.core.utils import (
+from app.core.utils.security import (
     create_user_session,
     generate_jwt_access_token,
     generate_jwt_refresh_token,

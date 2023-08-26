@@ -11,7 +11,7 @@ from app.models.user import User, UserSession
 from app.schemas.response_schema import AccessToken, RefreshToken
 
 
-def generate_hashed_password(plain_password: str | bytes) -> str:
+async def generate_hashed_password(plain_password: str | bytes) -> str:
     if isinstance(plain_password, str):
         plain_password = plain_password.encode()
     return bcrypt.hashpw(plain_password, bcrypt.gensalt()).decode()
