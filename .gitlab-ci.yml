@@ -11,6 +11,8 @@ cache:
 
 tests:
   stage: tests & linters
+  variables:
+    PYTHONPATH: "$CI_PROJECT_DIR/app"
   services:
     - postgres:15.3
   script:

@@ -5,6 +5,6 @@ RUN pip install -r /tmp/requirements.txt && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ./app ./
+COPY ./app .
 
 CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "3333"]
