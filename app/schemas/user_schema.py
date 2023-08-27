@@ -57,3 +57,10 @@ class UserCreateOnMonolith(BaseModel):
     external_user_uid: uuid.UUID
     username: UsernameStr
     email: EmailStr
+
+
+class UserUpdateOnMonolith(BaseModel):
+    """Updated data to be sent to monolith."""
+
+    external_user_uid: uuid.UUID
+    password: str
