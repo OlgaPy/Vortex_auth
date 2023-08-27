@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 async def update_user_and_sync_to_monolith(
-        db: Session, db_user: User, obj_in: Union[user_schema.UserUpdate, Dict[str, Any]]
+    db: Session, db_user: User, obj_in: Union[user_schema.UserUpdate, Dict[str, Any]]
 ) -> User | None:
     """
     Will update User in DB. Mostly reserved for the pass.
@@ -25,7 +25,9 @@ async def update_user_and_sync_to_monolith(
     if isinstance(obj_in, dict):
         updated_data = obj_in
     else:
-        updated_data = obj_in.model_dump(exclude_unset=True)  # To receive partial updates
+        updated_data = obj_in.model_dump(
+            exclude_unset=True
+        )  # To receive partial updates
     if updated_data["password"]:
         hashed_password = generate_hashed_password(updated_data["password"])
         del updated_data["password"]
@@ -57,7 +59,7 @@ async def create_user(db: Session, user: user_schema.UserCreate) -> User:
 
 
 async def create_user_and_sync_to_monolith(
-        *, db: Session, user: user_schema.UserCreate
+    *, db: Session, user: user_schema.UserCreate
 ) -> User:
     db_user = User(
         uuid=uuid.uuid4(),
