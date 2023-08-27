@@ -10,7 +10,6 @@ from tenacity import (
 from app.core.settings import settings
 from app.external.exceptions import MonolithUserCreateException
 from app.models.user import User
-from app.schemas.user_schema import UserCreateOnMonolith
 from app.schemas.user_schema import UserCreateOnMonolith, UserUpdateOnMonolith
 
 
