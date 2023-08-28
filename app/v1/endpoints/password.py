@@ -8,7 +8,7 @@ from app import deps
 # from app.core.utils import verify_password_reset_token
 from app.crud import crud_user
 from app.external.exceptions import MonolithUserCreateException
-# from app.schemas.response_schema import HTTPResponse
+from app.schemas.response_schema import HTTPResponse
 from app.schemas.user_schema import User, UserUpdate
 
 logger = logging.getLogger(__name__)
@@ -20,8 +20,14 @@ def reset():
     pass
 
 
-@router.post("/confirm", response_model=User, status_code=HTTPStatus.CREATED)
-async def confirm(payload: UserUpdate = Body(...), db: Session = Depends(deps.get_db)):
+@router.post(
+    "/confirm",
+    status_code=HTTPStatus.CREATED
+)
+async def confirm(
+        payload: UserUpdate,
+        db: Session = Depends(deps.get_db)
+):
     # email = verify_password_reset_token(token)
     # if not email:
     #     raise HTTPException(
@@ -39,13 +45,14 @@ async def confirm(payload: UserUpdate = Body(...), db: Session = Depends(deps.ge
 
     try:
         updated_user = await crud_user.update_user_and_sync_to_monolith(
-            db=db, db_user=user, obj_in=user_in_update
-        )
+            db=db,
+            db_user=user,
+            obj_in=user_in_update)
     except MonolithUserCreateException:
         raise HTTPException(
             status_code=HTTPStatus.BAD_GATEWAY,
             detail="Не удалось обновить пароль пользователя.",
         )
 
-    # logger.debug("Password for user %s has been updated successfully", user.username)
+    logger.debug("Password for user %s has been updated successfully", user.username)
     return updated_user

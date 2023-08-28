@@ -21,18 +21,42 @@ class UserCreate(UserBase):
     username: UsernameStr
     password: str
 
-    @field_validator("username")
-    @classmethod
-    def check_username(cls, value: str, info: FieldValidationInfo) -> str:
-        # TODO: добавить проверку по словарю
-        # assert False, f"{info.field_name} Такое имя запрещено к регистрации"
-        return value
+    # @field_validator("username")
+    # @classmethod
+    # def check_username(cls, value: str, info: FieldValidationInfo) -> str:
+    #     # TODO: добавить проверку по словарю
+    #     # assert False, f"{info.field_name} Такое имя запрещено к регистрации"
+    #     return value
 
 
 class UserUpdate(UserBase):
-    """Model to update user."""
-
     password: str
+
+    @field_validator("password")
+    @classmethod
+    def check_password(cls, value: str, info: FieldValidationInfo) -> str:
+        min_length = 8
+        max_length = 16
+
+        # print("INFO", info)
+        # print("INFODATA", info.data)
+
+        if len(value) < min_length:
+            raise ValueError("Ваш пароль слишком короткий. Минимальная длина - 8 символов")
+
+        if len(value) > max_length:
+            raise ValueError("Ваш пароль слишком длинный. Максимальная длина - 16 символов")
+
+        if not any(character.islower() for character in value):
+            raise ValueError("Пароль должен включать строчные буквы")
+
+        if not any(character.isdigit() for character in value):
+            raise ValueError("Пароль должен включать цифру")
+
+        if not any(character.isupper() for character in value):
+            raise ValueError("Пароль должен включать заглавные буквы")
+
+        return value
 
 
 class UserInDbBase(UserBase):
