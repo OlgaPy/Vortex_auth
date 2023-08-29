@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from redis.asyncio import Redis
 from sqlalchemy.orm import Session
 from tenacity import RetryError
 
@@ -45,6 +46,7 @@ async def register(
     user_in: user_schema.UserCreate,
     request: Request,
     db: Session = Depends(deps.get_db),
+    redis: Redis = Depends(deps.get_redis),
     user_agent: Annotated[str | None, Header()] = None,
 ):
     """Регистрирует пользователя в базе Auth service и отправляет его на монолит.

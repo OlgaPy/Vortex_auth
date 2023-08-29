@@ -1,4 +1,4 @@
-from pydantic import PostgresDsn
+from pydantic import PostgresDsn, RedisDsn
 from pydantic_settings import BaseSettings
 
 
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_host: str | None = None
     smtp_port: int | None = None
+    redis_host: str | None = None
+    redis_port: int = 6379
+    redis_db: str = "1"
 
 
 settings = Settings()
@@ -40,5 +43,16 @@ def get_db_url() -> str:
             password=settings.postgres_password,
             host=settings.postgres_server,
             path=settings.postgres_db,
+        )
+    )
+
+
+def get_redis_url() -> str:
+    return str(
+        RedisDsn.build(
+            scheme="redis",
+            host=settings.redis_host,
+            port=settings.redis_port,
+            path=settings.redis_db,
         )
     )
