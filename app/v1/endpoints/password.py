@@ -9,7 +9,7 @@ from app import deps
 from app.crud import crud_user
 from app.external.exceptions import MonolithUserCreateException
 # from app.schemas.response_schema import HTTPResponse
-from app.schemas.user_schema import UserUpdate  # , User
+from app.schemas.user_schema import UserUpdate, UserUpdateOnMonolith
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -20,7 +20,9 @@ def reset():
     pass
 
 
-@router.post("/confirm", status_code=HTTPStatus.CREATED)
+@router.post(
+    "/confirm", response_model=UserUpdateOnMonolith, status_code=HTTPStatus.CREATED
+)
 async def confirm(payload: UserUpdate, db: Session = Depends(deps.get_db)):
     # email = verify_password_reset_token(token)
     # if not email:
@@ -48,4 +50,7 @@ async def confirm(payload: UserUpdate, db: Session = Depends(deps.get_db)):
         )
 
     logger.debug("Password for user %s has been updated successfully", user.username)
-    return updated_user
+    return UserUpdateOnMonolith(
+        external_user_uid=updated_user.uuid, password=updated_user.password
+    )
+    # return updated_user
