@@ -5,12 +5,8 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
-from app.crud import crud_user
-from app.main import app
-import random
-import string
-from app.schemas import user_schema
 from app.core.utils import check_password
+from app.main import app
 
 
 @pytest.mark.anyio
@@ -28,13 +24,13 @@ async def test_password_confirm(db: Session):
     assert data_create_user["email"] == result_data_create["email"]
     assert data_create_user["username"] == result_data_create["username"]
 
-    data_update_user_invalid_password = {
-        "password": "newtestpass"
-    }
+    data_update_user_invalid_password = {"password": "newtestpass"}
 
     with mock.patch("app.crud.crud_user.update_user_on_monolith"):
         async with AsyncClient(app=app, base_url="http://test") as ac:
-            response = await ac.post("/v1/password/confirm", json=data_update_user_invalid_password)
+            response = await ac.post(
+                "/v1/password/confirm", json=data_update_user_invalid_password
+            )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
@@ -44,23 +40,19 @@ async def test_password_confirm(db: Session):
 
     with mock.patch("app.crud.crud_user.update_user_on_monolith"):
         async with AsyncClient(app=app, base_url="http://test") as ac:
-            response = await ac.post("/v1/password/confirm", json=data_update_user_valid_password)
+            response = await ac.post(
+                "/v1/password/confirm", json=data_update_user_valid_password
+            )
 
     assert response.status_code == HTTPStatus.CREATED
     res_update_data = response.json()
 
-    print(res_update_data)
+    # print(res_update_data)
 
     assert data_update_user_valid_password["password"] != res_update_data["password"]
 
-    assert check_password(data_update_user_valid_password["password"], res_update_data["password"])
+    assert check_password(
+        data_update_user_valid_password["password"], res_update_data["password"]
+    )
 
     # assert False
-
-
-
-
-
-
-
-
