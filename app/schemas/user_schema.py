@@ -30,6 +30,8 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
+    """Model to update user."""
+
     password: str
 
     @field_validator("password")
@@ -42,10 +44,14 @@ class UserUpdate(UserBase):
         # print("INFODATA", info.data)
 
         if len(value) < min_length:
-            raise ValueError("Ваш пароль слишком короткий. Минимальная длина - 8 символов")
+            raise ValueError(
+                "Ваш пароль слишком короткий. Минимальная длина - 8 символов"
+            )
 
         if len(value) > max_length:
-            raise ValueError("Ваш пароль слишком длинный. Максимальная длина - 16 символов")
+            raise ValueError(
+                "Ваш пароль слишком длинный. Максимальная длина - 16 символов"
+            )
 
         if not any(character.islower() for character in value):
             raise ValueError("Пароль должен включать строчные буквы")
