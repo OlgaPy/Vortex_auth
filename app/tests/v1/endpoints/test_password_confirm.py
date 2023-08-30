@@ -5,7 +5,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
-from app.core.utils import check_password
+from app.core.utils import check_password, create_access_token
 from app.main import app
 
 
@@ -21,6 +21,7 @@ async def test_password_confirm(db: Session):
             result = await ac.post("/v1/user/register", json=data_create_user)
     assert result.status_code == HTTPStatus.CREATED
     result_data_create = result.json()
+
     assert data_create_user["email"] == result_data_create["email"]
     assert data_create_user["username"] == result_data_create["username"]
 
@@ -34,7 +35,11 @@ async def test_password_confirm(db: Session):
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
+    generated_token = create_access_token(data_create_user["email"])
+    # print(f"GENERATED_TOKEN: {generated_token}")
+
     data_update_user_valid_password = {
+        "code": generated_token,
         "password": "jWe833WkF5Wv",
     }
 
