@@ -1,3 +1,5 @@
+import secrets
+
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings
 
@@ -16,6 +18,8 @@ class Settings(BaseSettings):
     monolith_host: str
     monolith_internal_token_header: str
     monolith_internal_token: str
+    SECRET_KEY: str = secrets.token_urlsafe(32)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
 
 
 settings = Settings()

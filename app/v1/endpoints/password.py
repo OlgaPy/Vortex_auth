@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException  # , Body
 from sqlalchemy.orm import Session
 
 from app import deps
-# from app.core.utils import verify_password_reset_token
+from app.core.utils import verify_password_reset_token
 from app.crud import crud_user
 from app.external.exceptions import MonolithUserCreateException
 # from app.schemas.response_schema import HTTPResponse
@@ -24,13 +24,13 @@ def reset():
     "/confirm", response_model=UserUpdateOnMonolith, status_code=HTTPStatus.CREATED
 )
 async def confirm(payload: UserUpdate, db: Session = Depends(deps.get_db)):
-    # email = verify_password_reset_token(token)
-    # if not email:
-    #     raise HTTPException(
-    #         status_code=HTTPStatus.BAD_REQUEST,
-    #         detail="Произошла ошибка. Token недействителен!",
-    #     )
-    email = "tst@kapi.bar"
+    email = verify_password_reset_token(payload.code)
+    if not email:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Произошла ошибка. Token недействителен!",
+        )
+    # email = "tst@kapi.bar"
     user = await crud_user.get_by_email(db, email=email)  # received User
     if not user:
         raise HTTPException(

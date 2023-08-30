@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr, constr, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
@@ -32,6 +33,7 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     """Model to update user."""
 
+    code: Optional[str] = None
     password: str
 
     @field_validator("password")
