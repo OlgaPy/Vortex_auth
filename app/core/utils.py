@@ -1,10 +1,15 @@
-from datetime import datetime, timedelta
+import datetime
+import uuid
 from typing import Any, Optional, Union
 
 import bcrypt
 import jwt
+from fastapi import Request
+from sqlalchemy.orm import Session
 
 from app.core.settings import settings
+from app.models.user import User, UserSession
+from app.schemas.response_schema import AccessToken, RefreshToken
 
 
 def generate_hashed_password(plain_password: str | bytes) -> str:
@@ -22,12 +27,12 @@ def check_password(plain_password: str | bytes, hashed_password: str | bytes) ->
 
 
 def create_access_token(
-    subject: Union[str, Any], expires_delta: timedelta = None
+    subject: Union[str, Any], expires_delta: datetime.timedelta = None
 ) -> str:
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.datetime.utcnow() + datetime.timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     payload = {"exp": expire, "sub": str(subject)}
@@ -36,8 +41,50 @@ def create_access_token(
 
 
 def verify_password_reset_token(token: str) -> Optional[str]:
-    # try:
     decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
     return decoded_token["sub"]
-    # except jwt.JWTError:
-    #     return None
+
+
+async def generate_jwt_access_token(user: User) -> str:
+    """Generate access token."""
+    token = AccessToken(
+        exp=datetime.datetime.now()
+        + datetime.timedelta(minutes=settings.jwt_access_token_lifetime_minutes),
+        iss=settings.jwt_issuer,
+        aud=settings.jwt_audience,
+        jti=uuid.uuid4().hex,
+        user_id=str(user.uuid),
+    )
+    return jwt.encode(
+        payload=token.model_dump(),
+        key=settings.jwt_rsa_private_key,
+        algorithm="RS512",
+    )
+
+
+async def generate_jwt_refresh_token(*, user: User, jti: str = None) -> str:
+    """Generate refresh token and add into database for tracking purposes."""
+
+    jti = jti or uuid.uuid4()
+    token = RefreshToken(
+        exp=datetime.datetime.now()
+        + datetime.timedelta(days=settings.jwt_refresh_token_lifetime_days),
+        iss=settings.jwt_issuer,
+        aud=settings.jwt_audience,
+        jti=str(jti),
+        user_id=str(user.uuid),
+    )
+    return jwt.encode(
+        payload=token.model_dump(),
+        key=settings.jwt_rsa_private_key,
+        algorithm="RS512",
+    )
+
+
+async def create_user_session(
+    *, db: Session, user: User, request: Request, user_agent: str | None
+) -> UserSession:
+    user_session = UserSession(user=user, ip=request.client.host, useragent=user_agent)
+    db.add(user_session)
+    db.commit()
+    return user_session
