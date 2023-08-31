@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     debug: bool = True
     title: str = "Kapibara Auth Service API"
     version: str = "0.0.1-alpha"
+    environment: str = "local"
     db_uri: PostgresDsn | None = None
     postgres_user: str | None = None
     postgres_password: str | None = None
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
     redis_db: str = "1"
     confirmation_code_length: int = 32
     confirmation_code_ttl: int = 15 * 60
+    sentry_dsn: str | None = None
 
 
 settings = Settings()

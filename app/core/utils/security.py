@@ -110,7 +110,7 @@ async def generate_confirmation_code(
 ) -> str:
     # Divide by 2, since token_hex would generate code of said length in hex numbers
     # i.e. 2fb2 - has length of 2
-    code = secrets.token_hex(settings.confirmation_code_length / 2)
+    code = secrets.token_hex(settings.confirmation_code_length // 2)
     logger.info(
         "Generated %s confirmation code %s for user %s",
         code_type.value,
