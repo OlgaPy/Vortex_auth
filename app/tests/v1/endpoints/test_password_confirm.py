@@ -5,9 +5,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
-from app.core.utils.security import (
-    check_password,
-    create_access_token)
+from app.core.utils.security import check_password, create_access_token
 from app.crud import crud_user
 from app.main import app
 
