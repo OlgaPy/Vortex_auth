@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     redis_host: str | None = None
     redis_port: int = 6379
     redis_db: str = "1"
+    confirmation_code_length: int = 32
+    confirmation_code_ttl: int = 15 * 60
 
 
 settings = Settings()

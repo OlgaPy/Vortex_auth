@@ -10,6 +10,7 @@ from tenacity import RetryError
 from app import deps
 from app.core.utils.security import (
     create_user_session,
+    generate_and_email_confirmation_code,
     generate_jwt_access_token,
     generate_jwt_refresh_token,
 )
@@ -78,7 +79,9 @@ async def register(
             status_code=HTTPStatus.BAD_GATEWAY,
             detail="Не удалось зарегистрировать пользователя.",
         )
-    # TODO: create confirmation code and send to email
+
+    await generate_and_email_confirmation_code(redis=redis, user=user)
+
     user_session = await create_user_session(
         db=db, user=user, request=request, user_agent=user_agent
     )

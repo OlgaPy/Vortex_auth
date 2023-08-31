@@ -1,6 +1,6 @@
 from jinja2 import TemplateNotFound
 
-from app.main import templates
+from app.core.common import templates
 from app.schemas.email_schema import EmailContents
 
 

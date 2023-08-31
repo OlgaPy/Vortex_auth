@@ -1,6 +1,5 @@
 import logging
 
-import jinja2
 from fastapi import FastAPI
 
 from app.core.settings import settings
@@ -14,8 +13,3 @@ logging.basicConfig(
 app = FastAPI(title=settings.title, version=settings.version, debug=settings.debug)
 
 app.include_router(router, prefix="/v1")
-
-templates = jinja2.Environment(
-    loader=jinja2.PackageLoader("app", "templates"),
-    autoescape=jinja2.select_autoescape(["html", "txt"]),
-)
