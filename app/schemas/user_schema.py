@@ -96,9 +96,14 @@ class UserCreate(UserBase):
                 "Пароль должен содержать как минимум один из символов !№%()+?@#$^&*",
             )
 
+        try:
+            email_parts = info.data.get("email").split("@")
+        except AttributeError:
+            email_parts = []
+
         parts = (
             info.data.get("username"),
-            *info.data.get("email").split("@"),
+            *email_parts,
         )
 
         for part in filter(None, parts):
