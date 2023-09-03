@@ -7,15 +7,13 @@ from smtplib import SMTPException
 
 import bcrypt
 import jwt
-from fastapi import Request
 from redis.asyncio import Redis
-from sqlalchemy.orm import Session
 
 from app.core.email import send_email
 from app.core.enums import ConfirmationCodeType
 from app.core.settings import settings
 from app.core.utils.email import get_email_contents
-from app.models.user import User, UserSession
+from app.models.user import User
 from app.schemas.response_schema import AccessToken, RefreshToken
 
 logger = logging.getLogger(__name__)
@@ -69,15 +67,6 @@ async def generate_jwt_refresh_token(*, user: User, jti: str = None) -> str:
         key=settings.jwt_rsa_private_key,
         algorithm="RS512",
     )
-
-
-async def create_user_session(
-    *, db: Session, user: User, request: Request, user_agent: str | None
-) -> UserSession:
-    user_session = UserSession(user=user, ip=request.client.host, useragent=user_agent)
-    db.add(user_session)
-    db.commit()
-    return user_session
 
 
 async def generate_and_email_confirmation_code(redis: Redis, user: User):

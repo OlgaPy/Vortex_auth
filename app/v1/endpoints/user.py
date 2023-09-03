@@ -9,12 +9,11 @@ from tenacity import RetryError
 
 from app import deps
 from app.core.utils.security import (
-    create_user_session,
     generate_and_email_confirmation_code,
     generate_jwt_access_token,
     generate_jwt_refresh_token,
 )
-from app.crud import crud_user
+from app.crud import crud_user, crud_user_session
 from app.external.exceptions import MonolithUserCreateException
 from app.schemas import user_schema
 from app.schemas.response_schema import HTTPResponse
@@ -82,7 +81,7 @@ async def register(
 
     await generate_and_email_confirmation_code(redis=redis, user=user)
 
-    user_session = await create_user_session(
+    user_session = await crud_user_session.create_user_session(
         db=db, user=user, request=request, user_agent=user_agent
     )
     logger.debug("User %s registered successfully", user_in.username)

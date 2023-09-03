@@ -42,6 +42,7 @@ class TestUSer:
         user = await crud_user.get_by_email(db, self.user_data["email"])
         assert user.is_active is False
         assert check_password(self.user_data["password"], user.password) is True
+        assert len(user.sessions) == 1
 
     @pytest.mark.parametrize(
         "username",
