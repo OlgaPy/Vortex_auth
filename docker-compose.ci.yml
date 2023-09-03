@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  kapibara-monolith-ci:
+  kapibara-auth-ci:
     pull_policy: if_not_present
-    image: ${CI_REGISTRY_IMAGE-registry.gitlab.com/vortex185330/backend/MS_AUTH_Vortex}:${CI_COMMIT_SHORT_SHA-latest}
+    image: ${CI_REGISTRY_IMAGE-registry.gitlab.com/vortex185330/backend/ms_auth_vortex}:${CI_COMMIT_SHORT_SHA-latest}
     volumes:
       - .:/app
     environment:
