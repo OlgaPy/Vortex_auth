@@ -14,7 +14,7 @@ from app.models.user import User
 
 @pytest.mark.anyio
 class TestUSer:
-    def setup(self):
+    def setup_method(self):
         self.user_data = dict(
             email="tst@example.com",
             username="testuser",
@@ -83,13 +83,13 @@ class TestUSer:
         data = {
             "email": "other@example.com",
             "username": "username",
-            "password": "ComplexPassword!",
+            "password": "ComplexPassword123!",
             existing_data: getattr(existing_db_user, existing_data),
         }
         with self.patch_create_user, self.patch_externals:
             result = await self._register(data)
 
-        assert result.status_code == HTTPStatus.BAD_REQUEST
+        assert result.status_code == HTTPStatus.BAD_REQUEST, result.content.decode()
         response = result.json()
         assert response["detail"] == expected_error_message
 
