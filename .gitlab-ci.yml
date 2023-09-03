@@ -1,28 +1,40 @@
+default:
+  tags:
+    - backend
+    - kapibara
+  image: docker:24.0.5
+
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'
 
 stages:
-  - docker build
+  - build-docker
   - tests & linters
 
-cache:
-    paths:
-      - ~/.cache/pip/
-build:
-  stage: docker build
-  script:
-    docker build -t kapibara/auth:$CI_COMMIT_SHORT_SHA .
+services:
+  - docker:24.0.5-dind
+  - postgres:15.3
 
-tests:
-  stage: tests & linters
-  services:
-    - postgres:15.3
+Build & Push Docker:
+  stage: build-docker
   script:
-    - docker run -e POSTGRES_SERVER=host.docker.internal:5432 kapibara/auth:$CI_COMMIT_SHORT_SHA pytest
-    - pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
-    # to not fail a build if artifacts didn't get generated
-    - touch coverage.xml report.xml
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull "${CI_REGISTRY_IMAGE}:latest" || true
+    - docker build --cache-from "${CI_REGISTRY_IMAGE}:latest"
+      -t "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      -t "${CI_REGISTRY_IMAGE}:${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME-latest}"
+      .
+    - docker push "${CI_REGISTRY_IMAGE}" --all-tags
+
+Run pytest:
+  stage: tests & linters
+  needs:
+    - Build & Push Docker
+  script:
+    - DATABASE_URL="psql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_PORT_5432_TCP_ADDR}:5432/${POSTGRES_DB}"
+      docker compose -f docker-compose.ci.yml run kapibara-auth-ci
+      pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
@@ -32,25 +44,18 @@ tests:
         path: coverage.xml
       junit: report.xml
 
-linters:
+Run linters:
+  needs:
+    - Build & Push Docker
   stage: tests & linters
   script:
-    - apt install git -y
-    - pre-commit run -a
+    - docker compose -f docker-compose.ci.yml run kapibara-auth-ci pre-commit run -a
 
 variables:
-  PYTHONPATH: $CI_PROJECT_PATH
-  POSTGRES_DB: "auth"
-  POSTGRES_USER: "auth"
-  POSTGRES_PASSWORD: "auth"
-  POSTGRES_SERVER: postgres:5432
-
-default:
-  tags:
-    - backend
-    - kapibara
-  image: python:3.11-slim-buster
-  before_script:
-    - apt update
-    - apt install gcc -y
-    - pip install -r requirements.txt
+  POSTGRES_DB: "kapibara-auth"
+  POSTGRES_USER: "kapibara-auth"
+  POSTGRES_PASSWORD: "kapibara-auth"
+  DATABASE_URL: "psql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_PORT_5432_TCP_ADDR}:5432/${POSTGRES_DB}"
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
