@@ -18,7 +18,7 @@ from app.schemas.user_schema import UserCreateOnMonolith, UserUpdateOnMonolith
     stop=(stop_after_delay(30) | stop_after_attempt(5)),
 )
 def update_user_on_monolith(*, user: User):
-    update_user_url = f"{settings.monolith_host}/v1/users/"
+    update_user_url = f"{settings.monolith_host}/v1/users/{user.uuid}/"
     updated_user_on_monolith = UserUpdateOnMonolith(
         external_user_uid=user.uuid, password=user.password
     )
