@@ -25,6 +25,15 @@ def anyio_backend():
     return "asyncio"
 
 
+@pytest.fixture
+def anyio_backend():
+    """Make async tests to be executed against asyncio backend, another option is trio.
+
+    Delete this fixture if every test needs to be executed against both backends.
+    """
+    return "asyncio"
+
+
 @pytest.fixture(scope="session")
 def db_engine() -> Generator:
     test_db_url = str(
