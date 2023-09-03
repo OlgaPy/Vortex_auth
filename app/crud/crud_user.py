@@ -6,6 +6,7 @@ from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from app.core.utils.security import generate_hashed_password
+from app.external.exceptions import MonolithUserCreateException
 from app.external.monolith import create_user_on_monolith
 from app.models.user import User
 from app.schemas import user_schema
@@ -34,10 +35,10 @@ async def create_user_and_sync_to_monolith(
     try:
         create_user_on_monolith(user=db_user)
         db_user.synced_at = datetime.datetime.now()
-    except Exception:
+    except Exception as e:
         db.rollback()
         logger.exception("Can't create user %s on monolith", user.username)
-        raise
+        raise MonolithUserCreateException(f"Error {e}")
     logger.info("User %s synced to the monolith", user.username)
     db.commit()
     return db_user
