@@ -12,10 +12,11 @@ from app.main import app
 from app.models.user import User
 
 
+@pytest.mark.anyio
 class TestUSer:
     def setup(self):
         self.user_data = dict(
-            email="tst@kapi.bar",
+            email="tst@example.com",
             username="testuser",
             password="testpass",
         )
@@ -28,7 +29,6 @@ class TestUSer:
         )
         self.patch_create_user = mock.patch("app.crud.crud_user.create_user_on_monolith")
 
-    @pytest.mark.anyio
     async def test_register_user(self, db: Session):
         with self.patch_create_user, self.patch_externals:
             result = await self._register(self.user_data)
@@ -54,7 +54,6 @@ class TestUSer:
             " moderator",
         ),
     )
-    @pytest.mark.anyio
     async def test_register_user_invalid_username(self, db: Session, username):
         with self.patch_create_user, self.patch_externals:
             result = await self._register({**self.user_data, "username": username})
@@ -70,19 +69,18 @@ class TestUSer:
             ("email", "Пользователь с таким email уже зарегистрирован."),
         ),
     )
-    @pytest.mark.anyio
     async def test_register_user_with_existing_data(
         self, db: Session, existing_data, expected_error_message
     ):
         existing_db_user = User(
             uuid=uuid.uuid4(),
-            username="kapibarin",
-            email="tst@kapi.bar",
+            username="newuser",
+            email="tst@example.com",
             password=await generate_hashed_password("password"),
         )
         db.add(existing_db_user)
         data = {
-            "email": "other@kapi.bar",
+            "email": "other@example.com",
             "username": "username",
             "password": "testpass",
             existing_data: getattr(existing_db_user, existing_data),
@@ -94,7 +92,6 @@ class TestUSer:
         response = result.json()
         assert response["detail"] == expected_error_message
 
-    @pytest.mark.anyio
     async def test_register_user_monolith_not_responding(self, db: Session):
         with mock.patch(
             "app.crud.crud_user.create_user_on_monolith",
@@ -106,6 +103,15 @@ class TestUSer:
         assert response["detail"] == "Не удалось зарегистрировать пользователя."
         user = await crud_user.get_by_email(db, self.user_data["email"])
         assert user is None
+
+    @pytest.mark.parametrize("email", ("hello@", "@hello", "admin@kapi.bar"))
+    async def test_register_user_wrong_email(self, db: Session, email):
+        with self.patch_create_user, self.patch_externals:
+            result = await self._register({**self.user_data, "email": email})
+
+        assert (
+            result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        ), result.content.decode()
 
     async def _register(self, data: dict):
         async with AsyncClient(app=app, base_url="http://test") as ac:

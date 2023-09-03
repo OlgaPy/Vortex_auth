@@ -54,6 +54,17 @@ class UserCreate(UserBase):
 
         return value
 
+    @field_validator("email")
+    @classmethod
+    def check_email(cls, value: str) -> str:
+        if value.endswith("@kapi.bar"):
+            raise PydanticCustomError(
+                "forbidden_email",
+                "Email ({email}) запрещено к регистрации.",
+                dict(email=value),
+            )
+        return value
+
 
 class UserUpdate(UserBase):
     """Model to update user."""
