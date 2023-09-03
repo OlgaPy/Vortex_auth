@@ -18,7 +18,7 @@ class TestUSer:
         self.user_data = dict(
             email="tst@example.com",
             username="testuser",
-            password="testpass",
+            password="ComplexPassword123!",
         )
         self.mock_token = mock.AsyncMock(return_value="token")
         self.patch_externals = mock.patch.multiple(
@@ -83,7 +83,7 @@ class TestUSer:
         data = {
             "email": "other@example.com",
             "username": "username",
-            "password": "testpass",
+            "password": "ComplexPassword!",
             existing_data: getattr(existing_db_user, existing_data),
         }
         with self.patch_create_user, self.patch_externals:
@@ -109,6 +109,26 @@ class TestUSer:
     async def test_register_user_wrong_email(self, db: Session, email):
         with self.patch_create_user, self.patch_externals:
             result = await self._register({**self.user_data, "email": email})
+
+        assert (
+            result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        ), result.content.decode()
+
+    @pytest.mark.parametrize(
+        "password,expected_error",
+        (
+            ("     sh     ", ""),
+            ("passwordnocapital!12", ""),
+            ("Passwordnospecial12", ""),
+            ("Passwordnodigit!", ""),
+            ("PASSWORDNOSMALL!12", ""),
+        ),
+    )
+    async def test_register_user_weak_password(
+        self, db: Session, password, expected_error
+    ):
+        with self.patch_create_user, self.patch_externals:
+            result = await self._register({**self.user_data, "password": password})
 
         assert (
             result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

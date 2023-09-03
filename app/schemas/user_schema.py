@@ -22,7 +22,18 @@ class UserCreate(UserBase):
 
     email: EmailStr
     username: UsernameStr
-    password: str
+    password: constr(strip_whitespace=True)
+
+    @field_validator("email")
+    @classmethod
+    def check_email(cls, value: str) -> str:
+        if value.endswith("@kapi.bar"):
+            raise PydanticCustomError(
+                "forbidden_email",
+                "Email ({email}) запрещено к регистрации.",
+                dict(email=value),
+            )
+        return value
 
     @field_validator("username")
     @classmethod
@@ -54,14 +65,34 @@ class UserCreate(UserBase):
 
         return value
 
-    @field_validator("email")
+    @field_validator("password")
     @classmethod
-    def check_email(cls, value: str) -> str:
-        if value.endswith("@kapi.bar"):
+    def check_password(cls, value: str) -> str:
+        if len(value) < settings.password_min_length:
             raise PydanticCustomError(
-                "forbidden_email",
-                "Email ({email}) запрещено к регистрации.",
-                dict(email=value),
+                "short_password",
+                "Пароль должен быть больше {min_length} символов.",
+                dict(min_length=settings.password_min_length),
+            )
+        if not re.search(r"\d", value):
+            raise PydanticCustomError(
+                "password_no_digit",
+                "Пароль должен содержать как минимум одну цифру.",
+            )
+        if not re.search(r"[A-ZА-Я]", value):
+            raise PydanticCustomError(
+                "password_no_capital",
+                "Пароль должен содержать как минимум одну заглавную букву.",
+            )
+        if not re.search(r"[a-zа-я]", value):
+            raise PydanticCustomError(
+                "password_no_lowercase",
+                "Пароль должен содержать как минимум одну строчную букву.",
+            )
+        if not re.search(r"[!№%()+?@#$^&*]", value):
+            raise PydanticCustomError(
+                "password_no_specialchar",
+                "Пароль должен содержать как минимум один из символов !№%()+?@#$^&*",
             )
         return value
 
