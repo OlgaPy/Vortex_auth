@@ -1,11 +1,14 @@
+import re
 import uuid
 
 from pydantic import BaseModel, ConfigDict, EmailStr, constr, field_validator
+from pydantic_core import PydanticCustomError
 from pydantic_core.core_schema import FieldValidationInfo
 
-UsernameStr = constr(
-    strip_whitespace=True, min_length=4, max_length=16, pattern=r"^[a-zA-Z0-9.\-_]+$"
-)
+from app.core.settings import settings
+from app.core.utils.security import is_username_allowed_to_register
+
+UsernameStr = constr(strip_whitespace=True)
 
 
 class UserBase(BaseModel):
@@ -24,8 +27,31 @@ class UserCreate(UserBase):
     @field_validator("username")
     @classmethod
     def check_username(cls, value: str, info: FieldValidationInfo) -> str:
-        # TODO: добавить проверку по словарю
-        # assert False, f"{info.field_name} Такое имя запрещено к регистрации"
+        if len(value) < settings.username_min_length:
+            raise PydanticCustomError(
+                "short_username",
+                "Имя ({username}) должно быть больше {min_length} символов.",
+                dict(username=value, min_length=settings.username_min_length),
+            )
+        if len(value) > settings.username_max_length:
+            raise PydanticCustomError(
+                "long_username",
+                "Имя ({username}) должно быть меньше {max_length} символов.",
+                dict(username=value, max_length=settings.username_max_length),
+            )
+        if not re.match(settings.username_allowed_chars_pattern, value):
+            raise PydanticCustomError(
+                "wrong_username",
+                "Имя ({username}) содержит недопустимые символы.",
+                dict(username=value),
+            )
+        if not is_username_allowed_to_register(value):
+            raise PydanticCustomError(
+                "forbidden_username",
+                "Имя ({username}) запрещено к регистрации.",
+                dict(username=value),
+            )
+
         return value
 
 

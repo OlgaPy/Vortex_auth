@@ -2,6 +2,7 @@ import datetime
 import logging
 import secrets
 import uuid
+from pathlib import Path
 from smtplib import SMTPException
 
 import bcrypt
@@ -121,3 +122,13 @@ async def generate_confirmation_code(
         code, f"{user.uuid}:{code_type.value}", ex=settings.confirmation_code_ttl
     )
     return code
+
+
+def is_username_allowed_to_register(username: str) -> bool:
+    usernames_blacklist_file = (
+        Path(__file__).resolve().parent.parent / "data" / "usernames-blacklist.txt"
+    )
+    with open(usernames_blacklist_file) as f:
+        usernames = {x.strip() for x in f}
+
+    return username.lower().strip() not in usernames

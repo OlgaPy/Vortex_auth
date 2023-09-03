@@ -6,7 +6,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
-from app.core.utils.security import generate_hashed_password
+from app.core.utils.security import check_password, generate_hashed_password
 from app.crud import crud_user
 from app.main import app
 from app.models.user import User
@@ -32,6 +32,7 @@ class TestUSer:
     async def test_register_user(self, db: Session):
         with self.patch_create_user, self.patch_externals:
             result = await self._register(self.user_data)
+
         assert result.status_code == HTTPStatus.CREATED
         response = result.json()
         assert response["email"] == self.user_data["email"]
@@ -40,6 +41,27 @@ class TestUSer:
         assert response["refresh_token"] == await self.mock_token()
         user = await crud_user.get_by_email(db, self.user_data["email"])
         assert user.is_active is False
+        assert check_password(self.user_data["password"], user.password) is True
+
+    @pytest.mark.parametrize(
+        "username",
+        (
+            "   sh      ",
+            "veryyyloooonguuusername",
+            "wrong!chars",
+            " admin ",
+            "moder ",
+            " moderator",
+        ),
+    )
+    @pytest.mark.anyio
+    async def test_register_user_invalid_username(self, db: Session, username):
+        with self.patch_create_user, self.patch_externals:
+            result = await self._register({**self.user_data, "username": username})
+
+        assert (
+            result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        ), result.content.decode()
 
     @pytest.mark.parametrize(
         "existing_data,expected_error_message",
@@ -68,9 +90,9 @@ class TestUSer:
         with self.patch_create_user, self.patch_externals:
             result = await self._register(data)
 
-            assert result.status_code == HTTPStatus.BAD_REQUEST
-            response = result.json()
-            assert response["detail"] == expected_error_message
+        assert result.status_code == HTTPStatus.BAD_REQUEST
+        response = result.json()
+        assert response["detail"] == expected_error_message
 
     @pytest.mark.anyio
     async def test_register_user_monolith_not_responding(self, db: Session):

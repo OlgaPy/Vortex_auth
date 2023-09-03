@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     confirmation_code_length: int = 32
     confirmation_code_ttl: int = 15 * 60
     sentry_dsn: str | None = None
+    username_min_length: int = 4
+    username_max_length: int = 15
+    username_allowed_chars_pattern: str = r"^[a-zA-Z0-9.\-_]+$"
 
 
 settings = Settings()
