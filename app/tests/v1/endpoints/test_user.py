@@ -115,17 +115,18 @@ class TestUSer:
         ), result.content.decode()
 
     @pytest.mark.parametrize(
-        "password,expected_error",
+        "password,expected_error_type",
         (
-            ("     sh     ", ""),
-            ("passwordnocapital!12", ""),
-            ("Passwordnospecial12", ""),
-            ("Passwordnodigit!", ""),
-            ("PASSWORDNOSMALL!12", ""),
+            ("     sh     ", "short_password"),
+            ("passwordnocapital!12", "password_no_capital"),
+            ("Passwordnospecial12", "password_no_specialchars"),
+            ("Passwordnodigit!", "password_no_digits"),
+            ("PASSWORDNOSMALL!12", "password_no_lowercase"),
+            ("Testuser1!", "password_similar"),
         ),
     )
     async def test_register_user_weak_password(
-        self, db: Session, password, expected_error
+        self, db: Session, password, expected_error_type
     ):
         with self.patch_create_user, self.patch_externals:
             result = await self._register({**self.user_data, "password": password})
@@ -133,6 +134,9 @@ class TestUSer:
         assert (
             result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         ), result.content.decode()
+        response = result.json()
+        error_type = response["detail"][0]["type"]
+        assert error_type == expected_error_type
 
     async def _register(self, data: dict):
         async with AsyncClient(app=app, base_url="http://test") as ac:

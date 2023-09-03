@@ -1,5 +1,6 @@
 import re
 import uuid
+from difflib import SequenceMatcher
 
 from pydantic import BaseModel, ConfigDict, EmailStr, constr, field_validator
 from pydantic_core import PydanticCustomError
@@ -26,7 +27,7 @@ class UserCreate(UserBase):
 
     @field_validator("email")
     @classmethod
-    def check_email(cls, value: str) -> str:
+    def check_email(cls, value: str, info: FieldValidationInfo) -> str:
         if value.endswith("@kapi.bar"):
             raise PydanticCustomError(
                 "forbidden_email",
@@ -67,7 +68,7 @@ class UserCreate(UserBase):
 
     @field_validator("password")
     @classmethod
-    def check_password(cls, value: str) -> str:
+    def check_password(cls, value: str, info: FieldValidationInfo) -> str:
         if len(value) < settings.password_min_length:
             raise PydanticCustomError(
                 "short_password",
@@ -76,7 +77,7 @@ class UserCreate(UserBase):
             )
         if not re.search(r"\d", value):
             raise PydanticCustomError(
-                "password_no_digit",
+                "password_no_digits",
                 "Пароль должен содержать как минимум одну цифру.",
             )
         if not re.search(r"[A-ZА-Я]", value):
@@ -91,9 +92,25 @@ class UserCreate(UserBase):
             )
         if not re.search(r"[!№%()+?@#$^&*]", value):
             raise PydanticCustomError(
-                "password_no_specialchar",
+                "password_no_specialchars",
                 "Пароль должен содержать как минимум один из символов !№%()+?@#$^&*",
             )
+
+        parts = (
+            info.data.get("username"),
+            *info.data.get("email").split("@"),
+        )
+
+        for part in filter(None, parts):
+            if (
+                SequenceMatcher(a=value, b=part).quick_ratio()
+                >= settings.password_max_similarity
+            ):
+                raise PydanticCustomError(
+                    "password_similar",
+                    "Пароль похож на имя или емаил",
+                )
+
         return value
 
 

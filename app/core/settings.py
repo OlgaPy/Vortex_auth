@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     username_max_length: int = 15
     username_allowed_chars_pattern: str = r"^[a-zA-Z0-9.\-_]+$"
     password_min_length: int = 4
+    password_max_similarity: float = 0.7
 
 
 settings = Settings()
