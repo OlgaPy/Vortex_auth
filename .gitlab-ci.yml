@@ -34,7 +34,7 @@ Run pytest:
   script:
     - DATABASE_URL="psql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_PORT_5432_TCP_ADDR}:5432/${POSTGRES_DB}"
       docker compose -f docker-compose.ci.yml run kapibara-auth-ci
-      pytest --cov --cov-report term --cov-report xml:coverage.xml --junit-xml=report.xml
+      pytest --cov --cov-report term --cov-report xml:coverage/coverage.xml --junit-xml=coverage/report.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always

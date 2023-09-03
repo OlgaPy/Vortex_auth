@@ -1,4 +1,5 @@
 from typing import Generator
+from unittest import mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,7 +10,7 @@ from sqlalchemy_utils import create_database, database_exists
 
 from app.core.settings import settings
 from app.db.base_class import BaseTable
-from app.deps import get_db
+from app.deps import get_db, get_redis
 from app.main import app
 
 
@@ -51,3 +52,10 @@ def client(db) -> Generator:
     app.dependency_overrides[get_db] = lambda: db
     with TestClient(app) as c:
         yield c
+
+
+async def redis_mock():
+    return mock.AsyncMock()
+
+
+app.dependency_overrides[get_redis] = redis_mock

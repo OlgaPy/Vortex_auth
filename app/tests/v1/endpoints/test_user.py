@@ -22,6 +22,7 @@ async def test_register_user(db: Session):
         "app.v1.endpoints.user",
         generate_jwt_access_token=mock_token,
         generate_jwt_refresh_token=mock_token,
+        generate_and_email_confirmation_code=mock.DEFAULT,
     ):
         async with AsyncClient(app=app, base_url="http://test") as ac:
             result = await ac.post("/v1/user/register", json=data)
