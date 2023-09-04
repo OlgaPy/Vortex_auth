@@ -30,7 +30,7 @@ repos:
           - --max-complexity=10
           - --max-line-length=90
           - --max-cognitive-complexity=10
-          - --ignore=B008,E203,E266,W503,D100,D104,D105,D106,D103,D102,D107,D20,D401
+          - --ignore=B008,E203,E266,W503,D100,D104,D105,D106,D103,D102,D107,D20
           - --per-file-ignores=*/tests/*:D101,D102,D103,apps.py,choices.py,admin.py:D101
         additional_dependencies: [
           'flake8-cognitive-complexity==0.1.0',
