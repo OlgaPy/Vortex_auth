@@ -1,13 +1,12 @@
-FROM python:3.11-slim-buster
-
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt && \
-    apt update && apt install git gcc -y && \
-    rm -rf /var/lib/apt/lists/*
-
+FROM python:3.11-slim-buster AS prod
+COPY requirements/base.txt /tmp/base.txt
+RUN pip install -r /tmp/base.txt
 WORKDIR /app
 COPY ./app .
-
-ENV PYTHONPATH /
-
 CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "3333"]
+
+FROM prod AS dev
+COPY requirements/dev.txt /tmp/dev.txt
+RUN pip install -r /tmp/dev.txt
+ENV PYTHONPATH /
+CMD ["uvicorn", "app.main:app", "--reload", "--proxy-headers", "--host", "0.0.0.0", "--port", "3333"]
