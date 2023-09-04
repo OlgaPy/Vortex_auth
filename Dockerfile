@@ -7,6 +7,7 @@ CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port"
 
 FROM prod AS dev
 COPY requirements/dev.txt /tmp/dev.txt
-RUN pip install -r /tmp/dev.txt
+RUN pip install -r /tmp/dev.txt && \
+    apt update && apt install git gcc -y
 ENV PYTHONPATH /
 CMD ["uvicorn", "app.main:app", "--reload", "--proxy-headers", "--host", "0.0.0.0", "--port", "3333"]
