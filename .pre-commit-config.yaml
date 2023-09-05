@@ -20,6 +20,7 @@ repos:
       - id: black
         language: python
         language_version: python3
+        args: ["--line-length=88"]
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
     hooks:
