@@ -2,7 +2,7 @@ import logging
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request  # , Body
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import ValidationError
 from redis.asyncio import Redis
 from sqlalchemy.orm import Session
@@ -20,6 +20,11 @@ from app.schemas.response_schema import HTTPResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+@router.post("/reset")
+async def reset():
+    pass
 
 
 @router.post(
