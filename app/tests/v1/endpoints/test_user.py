@@ -99,7 +99,7 @@ class TestUSer:
             side_effect=Exception("From test"),
         ), self.patch_externals:
             result = await self._register(self.user_data)
-        assert result.status_code == HTTPStatus.BAD_GATEWAY
+        assert result.status_code == HTTPStatus.SERVICE_UNAVAILABLE
         response = result.json()
         assert response["detail"] == "Не удалось зарегистрировать пользователя."
         user = await crud_user.get_by_email(db, self.user_data["email"])

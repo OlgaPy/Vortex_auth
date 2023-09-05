@@ -35,7 +35,7 @@ router = APIRouter()
             "model": HTTPResponse,
             "description": "Пользователь с такими данными уже существует",
         },
-        HTTPStatus.BAD_GATEWAY: {
+        HTTPStatus.SERVICE_UNAVAILABLE: {
             "model": HTTPResponse,
             "description": "Ошибка синхронизации пользователя с монолитом. "
             "Необходимо повторить отправку данных.",
@@ -75,7 +75,7 @@ async def register(
         user = await crud_user.create_user_and_sync_to_monolith(db=db, user=user_in)
     except (MonolithUserCreateException, RetryError):
         raise HTTPException(
-            status_code=HTTPStatus.BAD_GATEWAY,
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
             detail="Не удалось зарегистрировать пользователя.",
         )
 
