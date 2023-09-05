@@ -4,6 +4,7 @@ services:
   kapibara-auth:
     build: .
     restart: unless-stopped
+    container_name: kapibara-auth
     depends_on:
       - kapibara-auth-db
       - kapibara-redis

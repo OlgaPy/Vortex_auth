@@ -14,6 +14,17 @@ from app.schemas import user_schema
 logger = logging.getLogger(__name__)
 
 
+async def update_user_password(
+    db: Session, db_user: User, obj_in: user_schema.UserPasswordUpdate
+) -> User | None:
+    """
+    Will update User in DB. Mostly reserved for the password resetting.
+    """
+    db_user.password = await generate_hashed_password(obj_in.password)
+    db.commit()
+    return db_user
+
+
 async def create_user(db: Session, user: user_schema.UserCreate) -> User:
     db_user = User(**user.model_dump())
     db.add(db_user)
@@ -50,3 +61,7 @@ async def get_by_email(db: Session, email: EmailStr) -> User | None:
 
 async def get_by_username(db: Session, username: str) -> User | None:
     return db.query(User).filter(User.username == username).first()
+
+
+async def get_by_uuid(db: Session, user_uuid: uuid.UUID) -> User | None:
+    return db.query(User).filter(User.uuid == user_uuid).first()

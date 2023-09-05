@@ -9,9 +9,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy_utils import create_database, database_exists
 
 from app.core.settings import settings
+from app.core.utils.security import generate_hashed_password
 from app.db.base_class import BaseTable
 from app.deps import get_db, get_redis
 from app.main import app
+from app.models.user import User
 
 
 @pytest.fixture
@@ -56,6 +58,10 @@ def db(db_engine):
     connection.close()
 
 
+async def redis_mock():
+    return mock.AsyncMock()
+
+
 @pytest.fixture(scope="function")
 def client(db) -> Generator:
     app.dependency_overrides[get_db] = lambda: db
@@ -63,8 +69,16 @@ def client(db) -> Generator:
         yield c
 
 
-async def redis_mock():
-    return mock.AsyncMock()
-
-
 app.dependency_overrides[get_redis] = redis_mock
+
+
+@pytest.fixture
+async def user(db):
+    db_user = User(
+        username="testuser",
+        email="testuser@example.com",
+        password=await generate_hashed_password("password"),
+    )
+    db.add(db_user)
+    db.commit()
+    return db_user

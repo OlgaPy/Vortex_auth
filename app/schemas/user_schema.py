@@ -119,10 +119,10 @@ class UserCreate(UserBase):
         return value
 
 
-class UserUpdate(UserBase):
+class UserPasswordUpdate(UserCreate):
     """Model to update user."""
 
-    password: str
+    code: str
 
 
 class UserInDbBase(UserBase):
@@ -141,7 +141,7 @@ class User(UserInDbBase):
 
 
 class UserWithJWT(User):
-    """Uswr with JWT tokens."""
+    """User with JWT tokens."""
 
     access_token: str
     refresh_token: str
@@ -153,3 +153,13 @@ class UserCreateOnMonolith(BaseModel):
     external_user_uid: uuid.UUID
     username: UsernameStr
     email: EmailStr
+
+
+class UserUpdatedWithJWT(BaseModel):
+    """Updated user with JWT Token."""
+
+    uuid: uuid.UUID
+    username: UsernameStr
+    email: EmailStr
+    access_token: str
+    refresh_token: str
