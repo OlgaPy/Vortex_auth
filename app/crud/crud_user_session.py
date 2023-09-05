@@ -15,6 +15,10 @@ async def create_user_session(
     return user_session
 
 
+async def delete_user_sessions(*, db: Session, user: User) -> None:
+    db.query(UserSession).filter(UserSession.user == user).delete()
+
+
 async def get_user_sessions_by_user_uuid(
     db: Session, user_uuid
 ) -> list[Type[UserSession]] | None:

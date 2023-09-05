@@ -84,7 +84,7 @@ async def register(
     user_session = await crud_user_session.create_user_session(
         db=db, user=user, request=request, user_agent=user_agent
     )
-    logger.debug("User %s registered successfully", user_in.username)
+    logger.info("User %s registered successfully", user_in.username)
     return user_schema.UserWithJWT(
         uuid=user.uuid,
         username=user.username,

@@ -15,6 +15,7 @@ from app.core.settings import settings
 from app.core.utils.email import get_email_contents
 from app.models.user import User
 from app.schemas.response_schema import AccessToken, RefreshToken
+from app.schemas.security_schema import ConfirmationCodeData
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,18 @@ async def generate_confirmation_code(
         code, f"{user.uuid}:{code_type.value}", ex=settings.confirmation_code_ttl
     )
     return code
+
+
+async def fetch_confirmation_code_data(
+    redis: Redis, code: str
+) -> ConfirmationCodeData | None:
+    """Read the confirmation code from Redis."""
+    code_data = await redis.get(code)
+    try:
+        user_uuid, code_type = code_data.decode().split(":")
+    except (ValueError, TypeError):
+        return None
+    return ConfirmationCodeData(user_uuid=user_uuid, code_type=code_type)
 
 
 def is_username_allowed_to_register(username: str) -> bool:

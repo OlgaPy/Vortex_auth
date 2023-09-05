@@ -20,11 +20,12 @@ class TestUSer:
             username="testuser",
             password="ComplexPassword123!",
         )
-        self.mock_token = mock.AsyncMock(return_value="token")
+        self.mock_access_token = mock.AsyncMock(return_value="access token")
+        self.mock_refresh_token = mock.AsyncMock(return_value="refresh token")
         self.patch_externals = mock.patch.multiple(
             "app.v1.endpoints.user",
-            generate_jwt_access_token=self.mock_token,
-            generate_jwt_refresh_token=self.mock_token,
+            generate_jwt_access_token=self.mock_access_token,
+            generate_jwt_refresh_token=self.mock_refresh_token,
             generate_and_email_confirmation_code=mock.DEFAULT,
         )
         self.patch_create_user = mock.patch("app.crud.crud_user.create_user_on_monolith")
@@ -37,8 +38,8 @@ class TestUSer:
         response = result.json()
         assert response["email"] == self.user_data["email"]
         assert response["username"] == self.user_data["username"]
-        assert response["access_token"] == await self.mock_token()
-        assert response["refresh_token"] == await self.mock_token()
+        assert response["access_token"] == await self.mock_access_token()
+        assert response["refresh_token"] == await self.mock_refresh_token()
         user = await crud_user.get_by_email(db, self.user_data["email"])
         assert user.is_active is False
         assert check_password(self.user_data["password"], user.password) is True
