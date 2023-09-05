@@ -126,6 +126,12 @@ async def fetch_confirmation_code_data(
     return ConfirmationCodeData(user_uuid=user_uuid, code_type=code_type)
 
 
+async def get_code_details(encoded_code: bytes):
+    code = encoded_code.decode("utf-8")
+    user_uuid, code_type = code.split(":")[0], code.split(":")[1]
+    return user_uuid, code_type
+
+
 def is_username_allowed_to_register(username: str) -> bool:
     usernames_blacklist_file = (
         Path(__file__).resolve().parent.parent / "data" / "usernames-blacklist.txt"

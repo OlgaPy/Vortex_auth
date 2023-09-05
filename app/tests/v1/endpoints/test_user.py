@@ -28,7 +28,9 @@ class TestUSer:
             generate_jwt_refresh_token=self.mock_refresh_token,
             generate_and_email_confirmation_code=mock.DEFAULT,
         )
-        self.patch_create_user = mock.patch("app.crud.crud_user.create_user_on_monolith")
+        self.patch_create_user = mock.patch(
+            "app.crud.crud_user.create_user_on_monolith"
+        )
 
     async def test_register_user(self, db: Session):
         with self.patch_create_user, self.patch_externals:
