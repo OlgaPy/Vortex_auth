@@ -13,7 +13,7 @@ from app.models.user import User
 
 
 @pytest.mark.anyio
-class TestUSer:
+class TestRegisterUser:
     def setup_method(self):
         self.user_data = dict(
             email="tst@example.com",
@@ -78,7 +78,7 @@ class TestUSer:
             uuid=uuid.uuid4(),
             username="newuser",
             email="tst@example.com",
-            password=await generate_hashed_password("password"),
+            password=generate_hashed_password("password"),
         )
         db.add(existing_db_user)
         data = {
