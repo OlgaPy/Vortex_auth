@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app import deps
 from app.core.utils.security import (
     fetch_confirmation_code_data,
+    generate_and_email_password_reset_instruction,
     generate_jwt_access_token,
     generate_jwt_refresh_token,
 )
@@ -22,9 +23,30 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/reset")
-async def reset():
-    pass
+@router.post(
+    "/reset",
+    status_code=HTTPStatus.CREATED,
+    responses={
+        HTTPStatus.CREATED: {
+            "model": HTTPResponse,
+            "description": "Инструкция по восстановлению пароля отправлена на email,"
+            " если он был зарегистрирован на сайте.",
+        },
+    },
+)
+async def reset(
+    payload=security_schema.ResetPasswordData,
+    db: Session = Depends(deps.get_db),
+):
+    if payload.username:
+        existing_user = await crud_user.get_by_username(db, username=payload.username)
+    else:
+        existing_user = await crud_user.get_by_email(db, email=payload.email)
+
+    if existing_user:
+        await generate_and_email_password_reset_instruction
+    else:
+        logger.info("The user %s was not found in the database", existing_user)
 
 
 @router.post(

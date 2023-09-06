@@ -134,3 +134,7 @@ def is_username_allowed_to_register(username: str) -> bool:
         usernames = {x.strip() for x in f}
 
     return username.lower().strip() not in usernames
+
+
+async def generate_and_email_password_reset_instruction():
+    pass
