@@ -128,13 +128,13 @@ async def login(
     if not user:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Пользователь с таким данными не зарегистрирован.",
+            detail="Неверный логин или пароль.",
         )
 
     if not check_password(payload.password, user.password):
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Пользователь с таким данными не зарегистрирован.",
+            detail="Неверный логин или пароль.",
         )
 
     user_session = await crud_user_session.create_user_session(

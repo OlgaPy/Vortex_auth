@@ -44,9 +44,7 @@ class TestLoginUser:
         assert result.status_code == expected_status_code
         response = result.json()
         if expected_status_code != HTTPStatus.OK:
-            assert (
-                response["detail"] == "Пользователь с таким данными не зарегистрирован."
-            )
+            assert response["detail"] == "Неверный логин или пароль."
             return
         assert len(user.sessions) == 1
         assert response["uuid"] == str(user.uuid)
