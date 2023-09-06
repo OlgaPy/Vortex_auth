@@ -33,3 +33,10 @@ class RefreshToken(Token):
     """Refresh token."""
 
     token_type: str = "refresh"
+
+
+class TokensPair(BaseModel):
+    """Access / refresh tokens."""
+
+    access_token: str
+    refresh_token: str

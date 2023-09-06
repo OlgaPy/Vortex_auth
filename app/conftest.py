@@ -89,4 +89,5 @@ async def user(db):
 def settings_fixture(request):
     settings.jwt_algorithm = "HS256"
     settings.jwt_rsa_private_key = "test-key"
+    settings.jwt_rsa_public_key = "test-key"
     yield

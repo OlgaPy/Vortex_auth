@@ -23,3 +23,7 @@ async def get_user_sessions_by_user_uuid(
     db: Session, user_uuid
 ) -> list[Type[UserSession]] | None:
     return db.query(UserSession).filter(UserSession.user_uuid == user_uuid).all()
+
+
+async def get_user_session_by_uuid(db: Session, user_session_uuid) -> UserSession | None:
+    return db.query(UserSession).filter(UserSession.uuid == user_session_uuid).first()

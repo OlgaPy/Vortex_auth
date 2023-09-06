@@ -7,12 +7,21 @@ from smtplib import SMTPException
 
 import bcrypt
 import jwt
+from fastapi import Request
+from jwt import DecodeError, ExpiredSignatureError
 from redis.asyncio import Redis
+from sqlalchemy.orm import Session
 
 from app.core.email import send_email
 from app.core.enums import ConfirmationCodeType
+from app.core.exceptions import (
+    RefreshTokenExpired,
+    RefreshTokenInvalid,
+    WrongTokenTypeException,
+)
 from app.core.settings import settings
 from app.core.utils.email import get_email_contents
+from app.crud import crud_user_session
 from app.models.user import User
 from app.schemas.response_schema import AccessToken, RefreshToken
 from app.schemas.security_schema import ConfirmationCodeData
@@ -34,14 +43,14 @@ def check_password(plain_password: str | bytes, hashed_password: str | bytes) ->
     return bcrypt.checkpw(plain_password, hashed_password)
 
 
-async def generate_jwt_access_token(user: User) -> str:
+async def generate_jwt_access_token(user: User, jti: str = None) -> str:
     """Generate access token."""
     token = AccessToken(
         exp=datetime.datetime.now()
         + datetime.timedelta(minutes=settings.jwt_access_token_lifetime_minutes),
         iss=settings.jwt_issuer,
         aud=settings.jwt_audience,
-        jti=uuid.uuid4().hex,
+        jti=jti or uuid.uuid4().hex,
         user_id=str(user.uuid),
         is_active=user.is_active,
     )
@@ -74,11 +83,50 @@ async def generate_jwt_refresh_token(*, user: User, jti: str = None) -> str:
 async def decode_token(token: str) -> dict[str, str | int | bool]:
     return jwt.decode(
         jwt=token,
-        key=settings.jwt_rsa_private_key,
+        key=settings.jwt_rsa_public_key,
         algorithms=[settings.jwt_algorithm],
         audience=settings.jwt_audience,
         issuer=settings.jwt_issuer,
     )
+
+
+async def refresh_access_token(
+    db: Session,
+    refresh_token: str,
+    request: Request | None = None,
+    user_agent: str | None = None,
+) -> str:
+    try:
+        refresh_token = await decode_token(refresh_token)
+    except ExpiredSignatureError:
+        logger.info("We got expired token %s", refresh_token)
+        raise RefreshTokenExpired("Истек срок действия токена.")
+    except DecodeError:
+        logger.info("Cannot decode token %s", refresh_token)
+        raise RefreshTokenInvalid("Неверный формат токена.")
+
+    if (token_type := refresh_token.get("token_type")) != "refresh":
+        logger.info("User used wrong token type '%s' to refresh access token", token_type)
+        raise WrongTokenTypeException("Неверный тип токена.")
+
+    try:
+        user_session_uuid = refresh_token["jti"]
+    except KeyError:
+        logger.info("Can't find jti claim in refresh token %s", refresh_token)
+        raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
+
+    user_session = await crud_user_session.get_user_session_by_uuid(db, user_session_uuid)
+    if not user_session:
+        raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
+
+    if request:
+        user_session.ip = request.client.host
+    if user_agent:
+        user_session.useragent = user_agent
+    user_session.last_activity = datetime.datetime.now()
+    db.commit()
+
+    return await generate_jwt_access_token(user=user_session.user, jti=user_session_uuid)
 
 
 async def generate_and_email_confirmation_code(redis: Redis, user: User):
