@@ -1,6 +1,8 @@
 import uuid
+from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, model_validator
+from pydantic_core import PydanticCustomError
 
 from app.core.enums import ConfirmationCodeType
 
@@ -22,13 +24,14 @@ class RestorePasswordData(BaseModel):
 class ResetPasswordData(BaseModel):
     """Data to be used to reset password."""
 
-    username: str = None
-    email: EmailStr = None
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
 
-    @field_validator("email", pre=True, always=True)
-    def check_required_fields(cls, field, values):
-        if not field and not values.get("username"):
-            raise ValueError(
-                "Для востановление пароля, требуется ввести username или пароль."
+    @model_validator(mode="after")
+    def check_username_or_email(self):
+        if not self.username and not self.email:
+            raise PydanticCustomError(
+                "missing_field",
+                "Для востановление пароля, требуется ввести username или пароль.",
             )
-        return field
+        return self
