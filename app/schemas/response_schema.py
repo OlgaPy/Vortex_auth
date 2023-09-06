@@ -20,6 +20,7 @@ class Token(BaseModel):
     jti: str
     token_type: str = "access"
     user_id: str
+    is_active: bool = False
 
 
 class AccessToken(Token):

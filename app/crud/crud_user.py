@@ -20,7 +20,7 @@ async def update_user_password(
     """
     Will update User in DB. Mostly reserved for the password resetting.
     """
-    db_user.password = await generate_hashed_password(obj_in.password)
+    db_user.password = generate_hashed_password(obj_in.password)
     db.commit()
     return db_user
 
@@ -40,7 +40,7 @@ async def create_user_and_sync_to_monolith(
         uuid=uuid.uuid4(),
         username=user.username,
         email=user.email,
-        password=await generate_hashed_password(user.password),
+        password=generate_hashed_password(user.password),
     )
     db.add(db_user)
     try:

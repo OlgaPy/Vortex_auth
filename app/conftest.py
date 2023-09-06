@@ -14,6 +14,7 @@ from app.db.base_class import BaseTable
 from app.deps import get_db, get_redis
 from app.main import app
 from app.models.user import User
+from app.tests.data import TestUser
 
 
 @pytest.fixture
@@ -75,10 +76,17 @@ app.dependency_overrides[get_redis] = redis_mock
 @pytest.fixture
 async def user(db):
     db_user = User(
-        username="testuser",
-        email="testuser@example.com",
-        password=await generate_hashed_password("password"),
+        username=TestUser.username,
+        email=TestUser.email,
+        password=generate_hashed_password(TestUser.password),
     )
     db.add(db_user)
     db.commit()
     return db_user
+
+
+@pytest.fixture(scope="session", autouse=True)
+def settings_fixture(request):
+    settings.jwt_algorithm = "HS256"
+    settings.jwt_rsa_private_key = "test-key"
+    yield

@@ -20,7 +20,7 @@ from app.schemas.security_schema import ConfirmationCodeData
 logger = logging.getLogger(__name__)
 
 
-async def generate_hashed_password(plain_password: str | bytes) -> str:
+def generate_hashed_password(plain_password: str | bytes) -> str:
     if isinstance(plain_password, str):
         plain_password = plain_password.encode()
     return bcrypt.hashpw(plain_password, bcrypt.gensalt()).decode()
@@ -43,11 +43,12 @@ async def generate_jwt_access_token(user: User) -> str:
         aud=settings.jwt_audience,
         jti=uuid.uuid4().hex,
         user_id=str(user.uuid),
+        is_active=user.is_active,
     )
     return jwt.encode(
         payload=token.model_dump(),
         key=settings.jwt_rsa_private_key,
-        algorithm="RS512",
+        algorithm=settings.jwt_algorithm,
     )
 
 
@@ -66,7 +67,17 @@ async def generate_jwt_refresh_token(*, user: User, jti: str = None) -> str:
     return jwt.encode(
         payload=token.model_dump(),
         key=settings.jwt_rsa_private_key,
-        algorithm="RS512",
+        algorithm=settings.jwt_algorithm,
+    )
+
+
+async def decode_token(token: str) -> dict[str, str | int | bool]:
+    return jwt.decode(
+        jwt=token,
+        key=settings.jwt_rsa_private_key,
+        algorithms=[settings.jwt_algorithm],
+        audience=settings.jwt_audience,
+        issuer=settings.jwt_issuer,
     )
 
 

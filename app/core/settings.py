@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     monolith_host: str | None = None
     monolith_internal_token_header: str | None = None
     monolith_internal_token: str | None = None
+    jwt_algorithm: str = "RS512"
     jwt_rsa_private_key: str | None = None
     jwt_rsa_public_key: str | None = None
     jwt_access_token_lifetime_minutes: int = 5

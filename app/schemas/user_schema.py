@@ -163,3 +163,10 @@ class UserUpdatedWithJWT(BaseModel):
     email: EmailStr
     access_token: str
     refresh_token: str
+
+
+class UserLoginData(BaseModel):
+    """Login credentials."""
+
+    username: constr(strip_whitespace=True) | EmailStr
+    password: constr(strip_whitespace=True)
