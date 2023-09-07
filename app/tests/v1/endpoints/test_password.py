@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.enums import ConfirmationCodeType
 from app.main import app
 from app.models.user import User, UserSession
-from app.schemas.security_schema import ConfirmationCodeData  # , ResetPasswordData
+from app.schemas.security_schema import ConfirmationCodeData
 
 
 @pytest.mark.anyio
@@ -24,6 +24,42 @@ class TestPassword:
         self.mock_fetch_confirmation_code_data = mock.patch(
             "app.v1.endpoints.password.fetch_confirmation_code_data"
         )
+        self.mock_generate_and_email_confirmation_code = mock.patch(
+            "app.v1.endpoints.password.generate_and_email_password_reset_instruction",
+        )
+
+    @pytest.mark.parametrize(
+        "username,email,response_expected_status_code",
+        (
+            ("testuser", "testuser@example.com", HTTPStatus.CREATED),
+            ("testuser", "", HTTPStatus.CREATED),
+            ("", "testuser@example.com", HTTPStatus.CREATED),
+        ),
+    )
+    async def test_password_reset_valid_input(
+        self,
+        db: Session,
+        username,
+        email,
+        response_expected_status_code,
+        user: User,
+    ):
+        with self.mock_generate_and_email_confirmation_code:
+            result = await self._password_reset({"username": username, "email": email})
+        assert result.status_code == response_expected_status_code
+
+    async def test_password_reset_invalid_input(
+        self,
+        db: Session,
+        user: User,
+    ):
+        username = ""
+        email = ""
+        with self.mock_generate_and_email_confirmation_code:
+            result = await self._password_reset({"username": username, "email": email})
+        assert result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        response = result.json()
+        assert response["detail"][0]["type"] == "missing_field"
 
     @pytest.mark.parametrize(
         "password,expected_error_type",
