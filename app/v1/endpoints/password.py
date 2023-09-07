@@ -37,18 +37,21 @@ router = APIRouter()
 async def reset(
     payload=security_schema.ResetPasswordData,
     db: Session = Depends(deps.get_db),
+    redis: Redis = Depends(deps.get_redis),
 ):
     if payload.username:
-        existing_user = await crud_user.get_by_username(db, username=payload.username)
-    elif payload.username and payload.email:
-        existing_user = await crud_user.get_by_email(db, email=payload.email)
+        user = await crud_user.get_by_username(db, username=payload.username)
     else:
-        existing_user = await crud_user.get_by_email(db, email=payload.email)
+        user = await crud_user.get_by_email(db, email=payload.email)
 
-    if existing_user:
-        await generate_and_email_password_reset_instruction
+    if user:
+        await generate_and_email_password_reset_instruction(redis, user=user)
     else:
-        logger.info("The user %s was not found in the database", existing_user)
+        logger.info("The user %s was not found in the database", user.username)
+
+    logger.info(
+        "Password Recover email sent to %s for user %s", user.email, user.username
+    )
 
 
 @router.post(

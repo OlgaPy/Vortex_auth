@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.enums import ConfirmationCodeType
 from app.main import app
 from app.models.user import User, UserSession
-from app.schemas.security_schema import ConfirmationCodeData
+from app.schemas.security_schema import ConfirmationCodeData  # , ResetPasswordData
 
 
 @pytest.mark.anyio
@@ -148,3 +148,7 @@ class TestPassword:
     async def _password_confirm(self, data: dict):
         async with AsyncClient(app=app, base_url="http://test") as ac:
             return await ac.post("/v1/password/confirm", json=data)
+
+    async def _password_reset(self, data: dict):
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            return await ac.post("/v1/password/reset", json=data)
