@@ -1,12 +1,18 @@
 import logging
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from redis.asyncio import Redis
 from sqlalchemy.orm import Session
 from tenacity import RetryError
 
 from app import deps
+from app.core.exceptions import (
+    UserEmailExist,
+    UserExternalCreationError,
+    UserUsernameExist,
+    WrongLoginCredentials,
+)
 from app.core.utils.security import (
     check_password,
     generate_and_email_confirmation_code,
@@ -60,25 +66,16 @@ async def register(
     """
     if await crud_user.get_by_email(db, user_in.email):
         logger.info("User with email %s already exists", user_in.email)
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Пользователь с таким email уже зарегистрирован.",
-        )
+        raise UserEmailExist()
 
     if await crud_user.get_by_username(db, user_in.username):
         logger.info("User with username %s already exists", user_in.username)
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Пользователь с таким логином уже зарегистрирован.",
-        )
+        raise UserUsernameExist()
 
     try:
         user = await crud_user.create_user_and_sync_to_monolith(db=db, user=user_in)
     except (MonolithUserCreateException, RetryError):
-        raise HTTPException(
-            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
-            detail="Не удалось зарегистрировать пользователя.",
-        )
+        raise UserExternalCreationError()
 
     await generate_and_email_confirmation_code(redis=redis, user=user)
 
@@ -126,16 +123,10 @@ async def login(
         user = await crud_user.get_by_email(db, payload.username)
 
     if not user:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Неверный логин или пароль.",
-        )
+        raise WrongLoginCredentials()
 
     if not check_password(payload.password, user.password):
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Неверный логин или пароль.",
-        )
+        raise WrongLoginCredentials()
 
     user_session = await crud_user_session.create_user_session(
         db=db, user=user, request=request, user_agent=user_agent

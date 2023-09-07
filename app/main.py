@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from sentry_sdk.integrations.redis import RedisIntegration
 from starlette.responses import JSONResponse
 
-from app.core.exceptions import TokenException
+from app.core.exceptions import KapibaraException
 from app.core.settings import settings
 from app.v1.urls import router
 
@@ -32,8 +32,8 @@ app = FastAPI(title=settings.title, version=settings.version, debug=settings.deb
 app.include_router(router, prefix="/v1")
 
 
-@app.exception_handler(TokenException)
-async def token_exception_handler(request: Request, exc: TokenException):
+@app.exception_handler(KapibaraException)
+async def base_exception_handler(request: Request, exc: KapibaraException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": [{"type": exc.error_type, "msg": exc.message}]},
