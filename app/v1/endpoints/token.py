@@ -21,13 +21,13 @@ router = APIRouter()
             "model": response_schema.TokensPair,
             "description": "Пара refresh / access токенов.",
         },
-        HTTPStatus.UNAUTHORIZED: {
-            "model": response_schema.HTTPResponse,
-            "description": "Неверный refresh токен.",
-        },
         HTTPStatus.BAD_REQUEST: {
             "model": response_schema.HTTPResponse,
             "description": "Неверный тип токена, использован access вместо refresh.",
+        },
+        HTTPStatus.UNAUTHORIZED: {
+            "model": response_schema.HTTPResponse,
+            "description": "Неверный refresh токен.",
         },
     },
 )

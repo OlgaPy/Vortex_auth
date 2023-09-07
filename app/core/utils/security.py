@@ -10,6 +10,7 @@ import jwt
 from fastapi import Request
 from jwt import DecodeError, ExpiredSignatureError
 from redis.asyncio import Redis
+from sqlalchemy.exc import DataError
 from sqlalchemy.orm import Session
 
 from app.core.email import send_email
@@ -90,7 +91,7 @@ async def decode_token(token: str) -> dict[str, str | int | bool]:
     )
 
 
-async def refresh_access_token(
+async def refresh_access_token(  # noqa: C901
     db: Session,
     refresh_token: str,
     request: Request | None = None,
@@ -115,8 +116,16 @@ async def refresh_access_token(
         logger.info("Can't find jti claim in refresh token %s", refresh_token)
         raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
 
-    user_session = await crud_user_session.get_user_session_by_uuid(db, user_session_uuid)
+    try:
+        user_session = await crud_user_session.get_user_session_by_uuid(
+            db, user_session_uuid
+        )
+    except DataError:
+        logger.info("Not valid jti claim format in refresh token %s", refresh_token)
+        raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
+
     if not user_session:
+        logger.info("Can't find user session from refresh token %s", refresh_token)
         raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
 
     if request:
