@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.orm import Session
 
 from app.core.enums import ConfirmationCodeType
 from app.main import app
@@ -36,9 +35,7 @@ class TestPassword:
             ("Testuser1!", "password_similar"),
         ),
     )
-    async def test_password_invalid(
-        self, db: Session, password, expected_error_type, user: User
-    ):
+    async def test_password_invalid(self, password, expected_error_type, user: User):
         initial_user_password_hash = user.password
         with (
             self.mock_fetch_confirmation_code_data as mock_fetch_confirmation_code_data,
@@ -79,7 +76,6 @@ class TestPassword:
     )
     async def test_password_confirm(
         self,
-        db: Session,
         code_expired,
         password,
         response_expected_status_code,
@@ -108,13 +104,14 @@ class TestPassword:
             result.status_code == response_expected_status_code
         ), result.content.decode()
 
+        response = result.json()
         if response_expected_status_code == HTTPStatus.CREATED:
-            response = result.json()
             assert user.password != initial_user_password_hash
             assert response["access_token"] == await self.mock_access_token()
             assert response["refresh_token"] == await self.mock_refresh_token()
         else:
             assert user.password == initial_user_password_hash
+            assert response["detail"][0]["type"] == "password_code_invalid"
 
     async def test_user_sessions_are_deleted(self, db, user: User):
         first_session = UserSession(user=user, ip="127.0.0.1", useragent="Test UA")

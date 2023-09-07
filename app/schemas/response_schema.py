@@ -3,10 +3,17 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class ErrorDetail(BaseModel):
+    """Individual error details."""
+
+    msg: str
+    type: str  # noqa: VNE003
+
+
 class HTTPResponse(BaseModel):
     """Basic response schema for HTTPException."""
 
-    detail: str
+    detail: list[ErrorDetail]
 
 
 class Token(BaseModel):

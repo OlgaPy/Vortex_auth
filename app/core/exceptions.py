@@ -85,3 +85,25 @@ class RefreshTokenExpired(TokenException):
 
     error_type = "token_expired"
     message = "Истек срок действия токена."
+
+
+class PasswordResetException(KapibaraException):
+    """Base exception for password reset process."""
+
+    error_type = "cannot_reset_password"
+    status_code = HTTPStatus.BAD_REQUEST
+    message = "Не удалось обновить пароль пользователя."
+
+
+class PasswordResetCodeInvalid(PasswordResetException):
+    """Exception to raise when password reset code not valid or doesn't exist."""
+
+    error_type = "password_code_invalid"
+    message = "Произошла ошибка. Код восстановления недействителен!"
+
+
+class PasswordResetUserNotFound(PasswordResetException):
+    """Exception to raise when user from reset code not found."""
+
+    error_type = "password_user_not_found"
+    message = "Произошла ошибка. Такого юзера нет в системе!"
