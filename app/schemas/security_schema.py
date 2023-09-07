@@ -3,10 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, model_validator
 from pydantic_core import PydanticCustomError
+from pydantic_core.core_schema import FieldValidationInfo
 
 from app.core.enums import ConfirmationCodeType
-
-# from pydantic_core.core_schema import FieldValidationInfo
 
 
 class ConfirmationCodeData(BaseModel):
@@ -30,9 +29,12 @@ class ResetPasswordData(BaseModel):
     email: Optional[EmailStr] = None
 
     @model_validator(mode="after")
-    def check_username_or_email(self):
-        if self.email is None and self.username is None:
+    @classmethod
+    def check_username_or_email(cls, value, info: FieldValidationInfo):
+        if value.email is None and value.username is None:
             raise PydanticCustomError(
                 "missing_field",
                 "Для востановление пароля, требуется ввести username или пароль.",
             )
+        elif value.email and value.username:
+            value.username = None
