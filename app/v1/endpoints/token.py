@@ -1,10 +1,9 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app import deps
-from app.core.exceptions import TokenException, WrongTokenTypeException
 from app.core.utils.security import refresh_access_token
 from app.custom_types.request_types import RefreshToken, UserAgent
 from app.schemas import response_schema
@@ -45,12 +44,7 @@ async def refresh(
     В случае, если возвращается код `401` - необходимо заново авторизовать пользователя,
     чтобы получить новые токены.
     """
-    try:
-        access_token = await refresh_access_token(db, refresh_token, request, user_agent)
-    except WrongTokenTypeException as e:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))
-    except TokenException as e:
-        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail=str(e))
+    access_token = await refresh_access_token(db, refresh_token, request, user_agent)
 
     return response_schema.TokensPair(
         access_token=access_token,

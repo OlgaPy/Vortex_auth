@@ -18,6 +18,7 @@ from app.core.enums import ConfirmationCodeType
 from app.core.exceptions import (
     RefreshTokenExpired,
     RefreshTokenInvalid,
+    RefreshTokenNotFound,
     WrongTokenTypeException,
 )
 from app.core.settings import settings
@@ -101,20 +102,20 @@ async def refresh_access_token(  # noqa: C901
         refresh_token = await decode_token(refresh_token)
     except ExpiredSignatureError:
         logger.info("We got expired token %s", refresh_token)
-        raise RefreshTokenExpired("Истек срок действия токена.")
+        raise RefreshTokenExpired()
     except DecodeError:
         logger.info("Cannot decode token %s", refresh_token)
-        raise RefreshTokenInvalid("Неверный формат токена.")
+        raise RefreshTokenInvalid()
 
     if (token_type := refresh_token.get("token_type")) != "refresh":
         logger.info("User used wrong token type '%s' to refresh access token", token_type)
-        raise WrongTokenTypeException("Неверный тип токена.")
+        raise WrongTokenTypeException()
 
     try:
         user_session_uuid = refresh_token["jti"]
     except KeyError:
         logger.info("Can't find jti claim in refresh token %s", refresh_token)
-        raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
+        raise RefreshTokenInvalid()
 
     try:
         user_session = await crud_user_session.get_user_session_by_uuid(
@@ -122,11 +123,11 @@ async def refresh_access_token(  # noqa: C901
         )
     except DataError:
         logger.info("Not valid jti claim format in refresh token %s", refresh_token)
-        raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
+        raise RefreshTokenNotFound()
 
     if not user_session:
         logger.info("Can't find user session from refresh token %s", refresh_token)
-        raise RefreshTokenInvalid("Пользовательская сессия не найдена.")
+        raise RefreshTokenNotFound()
 
     if request:
         user_session.ip = request.client.host

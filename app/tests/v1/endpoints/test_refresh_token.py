@@ -33,7 +33,7 @@ class TestRefreshToken:
         result = await self._refresh_token(data={"refresh_token": access_token})
         assert result.status_code == HTTPStatus.BAD_REQUEST
         response = result.json()
-        assert response["detail"] == "Неверный тип токена."
+        assert response["detail"][0]["type"] == "wrong_token_type", response
 
     async def test_cannot_be_refreshed_with_expired_token(self, refresh_token: str):
         with freeze_time(
@@ -43,7 +43,7 @@ class TestRefreshToken:
             result = await self._refresh_token(data={"refresh_token": refresh_token})
         assert result.status_code == HTTPStatus.UNAUTHORIZED
         response = result.json()
-        assert response["detail"] == "Истек срок действия токена."
+        assert response["detail"][0]["type"] == "token_expired", response
 
     async def test_cannot_be_refreshed_with_wrong_format_token(self):
         result = await self._refresh_token(
@@ -51,14 +51,14 @@ class TestRefreshToken:
         )
         assert result.status_code == HTTPStatus.UNAUTHORIZED
         response = result.json()
-        assert response["detail"] == "Неверный формат токена."
+        assert response["detail"][0]["type"] == "token_invalid"
 
     async def test_cannot_be_refreshed_without_user_session(self, user: User):
         refresh_token = await generate_jwt_refresh_token(user=user, jti=str(uuid.uuid4()))
         result = await self._refresh_token(data={"refresh_token": refresh_token})
         assert result.status_code == HTTPStatus.UNAUTHORIZED
         response = result.json()
-        assert response["detail"] == "Пользовательская сессия не найдена."
+        assert response["detail"][0]["type"] == "session_from_token_not_found"
 
     @pytest.mark.parametrize("jti", (None, "wrong"))
     async def test_cannot_be_refreshed_with_wrong_user_session_info(
@@ -84,7 +84,9 @@ class TestRefreshToken:
         result = await self._refresh_token(data={"refresh_token": refresh_token})
         assert result.status_code == HTTPStatus.UNAUTHORIZED
         response = result.json()
-        assert response["detail"] == "Пользовательская сессия не найдена."
+        assert response["detail"][0]["type"] == (
+            "session_from_token_not_found" if jti else "token_invalid"
+        )
 
     async def _refresh_token(self, data: dict):
         async with AsyncClient(app=app, base_url="http://test") as ac:

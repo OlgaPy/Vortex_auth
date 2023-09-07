@@ -1,8 +1,10 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from sentry_sdk.integrations.redis import RedisIntegration
+from starlette.responses import JSONResponse
 
+from app.core.exceptions import TokenException
 from app.core.settings import settings
 from app.v1.urls import router
 
@@ -28,3 +30,11 @@ logging.basicConfig(
 app = FastAPI(title=settings.title, version=settings.version, debug=settings.debug)
 
 app.include_router(router, prefix="/v1")
+
+
+@app.exception_handler(TokenException)
+async def token_exception_handler(request: Request, exc: TokenException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": [{"type": exc.error_type, "msg": exc.message}]},
+    )
