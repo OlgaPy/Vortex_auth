@@ -136,5 +136,24 @@ def is_username_allowed_to_register(username: str) -> bool:
     return username.lower().strip() not in usernames
 
 
-async def generate_and_email_password_reset_instruction():
-    pass
+async def generate_and_email_password_reset_instruction(redis: Redis, user: User):
+    code = await generate_confirmation_code(
+        redis, user, code_type=ConfirmationCodeType.email
+    )
+    email_content = await get_email_contents(
+        email_type="password_reset_email",
+        context={
+            "code": code,
+            "user": user,
+        },
+    )
+    try:
+        await send_email(
+            sender=settings.default_email_from,
+            to=user.email,
+            subject=email_content.subject,
+            message=email_content.message,
+            html_message=email_content.html_message,
+        )
+    except SMTPException:
+        logger.exception("Cannot send password reset email to a user %s", user.username)

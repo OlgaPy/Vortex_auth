@@ -6,6 +6,8 @@ from pydantic_core import PydanticCustomError
 
 from app.core.enums import ConfirmationCodeType
 
+# from pydantic_core.core_schema import FieldValidationInfo
+
 
 class ConfirmationCodeData(BaseModel):
     """Details about confirmation code."""
@@ -29,9 +31,8 @@ class ResetPasswordData(BaseModel):
 
     @model_validator(mode="after")
     def check_username_or_email(self):
-        if not self.username and not self.email:
+        if self.email is None and self.username is None:
             raise PydanticCustomError(
                 "missing_field",
                 "Для востановление пароля, требуется ввести username или пароль.",
             )
-        return self

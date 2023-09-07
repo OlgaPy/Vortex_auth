@@ -40,6 +40,8 @@ async def reset(
 ):
     if payload.username:
         existing_user = await crud_user.get_by_username(db, username=payload.username)
+    elif payload.username and payload.email:
+        existing_user = await crud_user.get_by_email(db, email=payload.email)
     else:
         existing_user = await crud_user.get_by_email(db, email=payload.email)
 
