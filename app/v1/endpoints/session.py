@@ -54,7 +54,27 @@ def get_all(
     return current_user.sessions
 
 
-@router.delete("/", status_code=HTTPStatus.GONE)
+@router.delete(
+    "/",
+    response_description="Сессии удалены.",
+    status_code=HTTPStatus.NO_CONTENT,
+    responses={
+        HTTPStatus.UNAUTHORIZED: {
+            "model": HTTPResponse,
+            "description": "Срок действия токена вышел, необходима повторная "
+            "авторизация.",
+        },
+        HTTPStatus.BAD_REQUEST: {
+            "model": HTTPResponse,
+            "description": "Неверный тип токена, использован `refresh_token` "
+            "вместо `access_token`",
+        },
+        HTTPStatus.FORBIDDEN: {
+            "model": HTTPResponse,
+            "description": "Отсутствует заголовок авторизации",
+        },
+    },
+)
 async def delete_all(
     except_current: bool = True,
     current_user_and_session_uuid: tuple[User, str] = Depends(
@@ -62,6 +82,17 @@ async def delete_all(
     ),
     db: Session = Depends(get_db),
 ):
+    """Удаляет пользовательские сессии.
+
+    По умолчанию будут удалены все сессии, кроме текущей. Если `GET` параметр
+    `except_current=false`, будут удалены все сессии, включая текущую, и пользователь
+    сможет пользоваться сайтом до тех пор, пока не истечет действие `access_token`.
+
+    Необходима авторизация по токену, который должен быть передан в headers.
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    """
     current_user, session_uuid = current_user_and_session_uuid
     exclude_uuids = None
     if except_current:
