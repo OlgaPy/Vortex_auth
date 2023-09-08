@@ -1,3 +1,4 @@
+import uuid
 from typing import Type
 
 from fastapi import Request
@@ -15,8 +16,14 @@ async def create_user_session(
     return user_session
 
 
-async def delete_user_sessions(*, db: Session, user: User) -> None:
-    db.query(UserSession).filter(UserSession.user == user).delete()
+async def delete_user_sessions(
+    *, db: Session, user: User, exclude_uuids: list[uuid.UUID | str] = None
+) -> None:
+    query = db.query(UserSession).filter(UserSession.user == user)
+    if exclude_uuids:
+        query = query.filter(UserSession.uuid.notin_(exclude_uuids))
+    query.delete()
+    db.commit()
 
 
 async def get_user_sessions_by_user_uuid(

@@ -87,7 +87,7 @@ async def register(
         uuid=user.uuid,
         username=user.username,
         email=user.email,
-        access_token=await generate_jwt_access_token(user),
+        access_token=await generate_jwt_access_token(user, jti=user_session.uuid),
         refresh_token=await generate_jwt_refresh_token(user=user, jti=user_session.uuid),
     )
 
@@ -135,6 +135,6 @@ async def login(
         uuid=user.uuid,
         username=user.username,
         email=user.email,
-        access_token=await generate_jwt_access_token(user),
+        access_token=await generate_jwt_access_token(user, jti=user_session.uuid),
         refresh_token=await generate_jwt_refresh_token(user=user, jti=user_session.uuid),
     )

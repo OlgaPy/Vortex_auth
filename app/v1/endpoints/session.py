@@ -1,8 +1,11 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from app import deps
+from app.crud import crud_user_session
+from app.deps import get_db
 from app.models.user import User
 from app.schemas import user_schema
 from app.schemas.response_schema import HTTPResponse
@@ -32,7 +35,11 @@ router = APIRouter()
         },
     },
 )
-def get_all(current_user: User = Depends(deps.get_current_user)):
+def get_all(
+    current_user_and_session_uuid: tuple[User, str] = Depends(
+        deps.get_current_user_and_session_uuid
+    )
+):
     """Возвращает все сессии залогиненного пользователя.
 
     Сессия создается когда используется `/user/login` endpoint.
@@ -43,12 +50,25 @@ def get_all(current_user: User = Depends(deps.get_current_user)):
     Authorization: Bearer <access_token>
     ```
     """
+    current_user, _ = current_user_and_session_uuid
     return current_user.sessions
 
 
-@router.delete("/all")
-def delete_all():
-    ...
+@router.delete("/", status_code=HTTPStatus.GONE)
+async def delete_all(
+    except_current: bool = True,
+    current_user_and_session_uuid: tuple[User, str] = Depends(
+        deps.get_current_user_and_session_uuid
+    ),
+    db: Session = Depends(get_db),
+):
+    current_user, session_uuid = current_user_and_session_uuid
+    exclude_uuids = None
+    if except_current:
+        exclude_uuids = [session_uuid]
+    await crud_user_session.delete_user_sessions(
+        db=db, user=current_user, exclude_uuids=exclude_uuids
+    )
 
 
 @router.delete("/{session_id}")
