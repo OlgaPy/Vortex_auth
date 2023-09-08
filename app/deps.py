@@ -1,3 +1,5 @@
+import uuid
+
 import redis.asyncio as redis
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -18,6 +20,7 @@ from app.core.settings import get_redis_url
 from app.core.utils.security import decode_token
 from app.crud import crud_user
 from app.db.session import SessionLocal
+from app.models.user import User
 
 
 def get_db():
@@ -36,12 +39,12 @@ async def get_redis():
         await redis_client.close()
 
 
-async def get_current_user(
+async def get_current_user_and_session_uuid(
     auth: HTTPAuthorizationCredentials = Depends(
         HTTPBearer(auto_error=False, description="JWT Access token")
     ),
     db: Session = Depends(get_db),
-):
+) -> tuple[User, uuid.UUID | str]:
     if not auth:
         raise Forbidden()
     try:
@@ -61,4 +64,4 @@ async def get_current_user(
         raise TokenInvalid()
     if not user:
         raise UserFromTokenNotFound()
-    return user
+    return user, access_token.jti

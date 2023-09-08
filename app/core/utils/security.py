@@ -42,12 +42,13 @@ def check_password(plain_password: str | bytes, hashed_password: str | bytes) ->
 
 async def generate_jwt_access_token(user: User, jti: str | uuid.UUID = None) -> str:
     """Generate access token."""
+    jti = jti or uuid.uuid4()
     token = AccessToken(
         exp=datetime.datetime.now()
         + datetime.timedelta(minutes=settings.jwt_access_token_lifetime_minutes),
         iss=settings.jwt_issuer,
         aud=settings.jwt_audience,
-        jti=jti or uuid.uuid4().hex,
+        jti=str(jti),
         user_id=str(user.uuid),
         is_active=user.is_active,
     )
