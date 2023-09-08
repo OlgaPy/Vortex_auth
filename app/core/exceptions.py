@@ -122,3 +122,11 @@ class PasswordResetUserNotFound(PasswordResetException):
 
     error_type = "password_user_not_found"
     message = "Произошла ошибка. Такого юзера нет в системе!"
+
+
+class NotFound(KapibaraException):
+    """Exception to raise when entity not found."""
+
+    status_code = HTTPStatus.NOT_FOUND
+    error_type = "not_found"
+    message = "Объект не найдет."

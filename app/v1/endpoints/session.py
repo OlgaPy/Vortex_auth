@@ -1,9 +1,11 @@
+import logging
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app import deps
+from app.core.exceptions import NotFound
 from app.crud import crud_user_session
 from app.deps import get_db
 from app.models.user import User
@@ -12,9 +14,12 @@ from app.schemas.response_schema import HTTPResponse
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
 
 @router.get(
     "/",
+    summary="Вывод всех сессий",
     response_model=list[user_schema.UserSessionOut],
     response_description="Список всех сессий пользователя",
     status_code=HTTPStatus.OK,
@@ -56,6 +61,7 @@ def get_all(
 
 @router.delete(
     "/",
+    summary="Удаление всех сессий",
     response_description="Сессии удалены.",
     status_code=HTTPStatus.NO_CONTENT,
     responses={
@@ -102,6 +108,50 @@ async def delete_all(
     )
 
 
-@router.delete("/{session_id}")
-def delete_one(session_id: str):
-    ...
+@router.delete(
+    "/{session_uuid}",
+    summary="Удаление одной сессии",
+    response_description="Сессия удалена.",
+    status_code=HTTPStatus.NO_CONTENT,
+    responses={
+        HTTPStatus.UNAUTHORIZED: {
+            "model": HTTPResponse,
+            "description": "Срок действия токена вышел, необходима повторная "
+            "авторизация.",
+        },
+        HTTPStatus.BAD_REQUEST: {
+            "model": HTTPResponse,
+            "description": "Неверный тип токена, использован `refresh_token` "
+            "вместо `access_token`",
+        },
+        HTTPStatus.FORBIDDEN: {
+            "model": HTTPResponse,
+            "description": "Отсутствует заголовок авторизации",
+        },
+        HTTPStatus.NOT_FOUND: {
+            "model": HTTPResponse,
+            "description": "Сессия не найдена",
+        },
+    },
+)
+async def delete_one(
+    session_uuid: str,
+    current_user_and_session_uuid: tuple[User, str] = Depends(
+        deps.get_current_user_and_session_uuid
+    ),
+    db: Session = Depends(get_db),
+):
+    """Удаляет пользовательскую сессию.
+
+    Необходима авторизация по токену, который должен быть передан в headers.
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    """
+    user, _ = current_user_and_session_uuid
+    deleted = await crud_user_session.delete_user_session(
+        db=db, user=user, user_session_uuid=session_uuid
+    )
+    if not deleted:
+        logger.info("Session %s not found for user %s", session_uuid, user.username)
+        raise NotFound("Сессия не найдена.")
