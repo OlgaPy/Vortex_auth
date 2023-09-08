@@ -45,7 +45,7 @@ def check_password(plain_password: str | bytes, hashed_password: str | bytes) ->
     return bcrypt.checkpw(plain_password, hashed_password)
 
 
-async def generate_jwt_access_token(user: User, jti: str = None) -> str:
+async def generate_jwt_access_token(user: User, jti: str | uuid.UUID = None) -> str:
     """Generate access token."""
     token = AccessToken(
         exp=datetime.datetime.now()
@@ -63,7 +63,7 @@ async def generate_jwt_access_token(user: User, jti: str = None) -> str:
     )
 
 
-async def generate_jwt_refresh_token(*, user: User, jti: str = None) -> str:
+async def generate_jwt_refresh_token(*, user: User, jti: str | uuid.UUID = None) -> str:
     """Generate refresh token and add into database for tracking purposes."""
 
     jti = jti or uuid.uuid4()
