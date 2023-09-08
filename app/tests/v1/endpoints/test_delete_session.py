@@ -17,7 +17,15 @@ from app.models.user import User, UserSession
 @pytest.mark.anyio
 class TestDeleteSession:
     @pytest.mark.parametrize(
-        "except_current,expected_sessions_count", ((True, 1), (False, 0))
+        "except_current,expected_sessions_count",
+        (
+            (True, 1),
+            (False, 0),
+            ("true", 1),
+            ("false", 0),
+            (1, 1),
+            (0, 0),
+        ),
     )
     async def test_delete_sessions(
         self, db: Session, except_current, expected_sessions_count, access_token_and_user
@@ -46,7 +54,7 @@ class TestDeleteSession:
             params={"except_current": except_current},
             headers={"Authorization": f"Bearer {access_token}"},
         )
-        assert result.status_code == HTTPStatus.GONE
+        assert result.status_code == HTTPStatus.NO_CONTENT
         assert len(user.sessions) == expected_sessions_count
         assert len(another_user.sessions) == 1
         if expected_sessions_count == 1:
