@@ -8,6 +8,7 @@ from freezegun import freeze_time
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
+from app.core.enums import TokenType
 from app.core.settings import settings
 from app.core.utils.security import generate_jwt_refresh_token
 from app.main import app
@@ -70,7 +71,7 @@ class TestRefreshToken:
             iss=settings.jwt_issuer,
             aud=settings.jwt_audience,
             user_id=str(user.uuid),
-            token_type="refresh",
+            token_type=TokenType.refresh,
         )
         if jti:
             token["jti"] = jti

@@ -24,6 +24,14 @@ class WrongLoginCredentials(KapibaraException):
     message = "Неверный логин или пароль."
 
 
+class Forbidden(KapibaraException):
+    """Exception to raise when no auth header."""
+
+    status_code = HTTPStatus.FORBIDDEN
+    error_type = "forbidden"
+    message = "Невозможно авторизовать запрос."
+
+
 class UserRegisterException(KapibaraException):
     """Base exception for user registration process."""
 
@@ -58,7 +66,14 @@ class TokenException(KapibaraException):
     status_code: int = HTTPStatus.UNAUTHORIZED
 
 
-class WrongTokenTypeException(TokenException):
+class UserFromTokenNotFound(TokenException):
+    """Exception to raise when user from token not found."""
+
+    error_type = "user_not_found"
+    message = "Пользователь не найден."
+
+
+class WrongTokenType(TokenException):
     """Exception to raise when token type is invalid for the context of operation."""
 
     status_code = HTTPStatus.BAD_REQUEST
@@ -66,21 +81,21 @@ class WrongTokenTypeException(TokenException):
     message = "Неверный тип токена."
 
 
-class RefreshTokenInvalid(TokenException):
+class TokenInvalid(TokenException):
     """Exception to raise when we don't have any user session associated with token."""
 
     error_type = "token_invalid"
     message = "Неверный формат токена."
 
 
-class RefreshTokenNotFound(TokenException):
+class TokenNotFound(TokenException):
     """Exception to raise when session from token not found."""
 
     error_type = "session_from_token_not_found"
     message = "Пользовательская сессия не найдена."
 
 
-class RefreshTokenExpired(TokenException):
+class TokenExpired(TokenException):
     """Exception to raise when token is expired."""
 
     error_type = "token_expired"

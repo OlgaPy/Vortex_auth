@@ -108,4 +108,7 @@ async def refresh_token(db, user: User) -> str:
 
 @pytest.fixture
 async def access_token(db, user: User) -> str:
+    user_session = UserSession(user=user, ip="127.0.0.1", useragent="pytest")
+    db.add(user_session)
+    db.commit()
     return await generate_jwt_access_token(user=user)

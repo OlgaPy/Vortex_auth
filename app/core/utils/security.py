@@ -8,24 +8,19 @@ from smtplib import SMTPException
 import bcrypt
 import jwt
 from fastapi import Request
-from jwt import DecodeError, ExpiredSignatureError
+from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
 from redis.asyncio import Redis
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm import Session
 
 from app.core.email import send_email
-from app.core.enums import ConfirmationCodeType
-from app.core.exceptions import (
-    RefreshTokenExpired,
-    RefreshTokenInvalid,
-    RefreshTokenNotFound,
-    WrongTokenTypeException,
-)
+from app.core.enums import ConfirmationCodeType, TokenType
+from app.core.exceptions import TokenExpired, TokenInvalid, TokenNotFound, WrongTokenType
 from app.core.settings import settings
 from app.core.utils.email import get_email_contents
 from app.crud import crud_user_session
 from app.models.user import User
-from app.schemas.response_schema import AccessToken, RefreshToken
+from app.schemas.response_schema import AccessToken, RefreshToken, Token
 from app.schemas.security_schema import ConfirmationCodeData
 
 logger = logging.getLogger(__name__)
@@ -82,13 +77,16 @@ async def generate_jwt_refresh_token(*, user: User, jti: str | uuid.UUID = None)
     )
 
 
-async def decode_token(token: str) -> dict[str, str | int | bool]:
-    return jwt.decode(
-        jwt=token,
-        key=settings.jwt_rsa_public_key,
-        algorithms=[settings.jwt_algorithm],
-        audience=settings.jwt_audience,
-        issuer=settings.jwt_issuer,
+async def decode_token(token: str) -> Token:
+    return Token(
+        **jwt.decode(
+            jwt=token,
+            key=settings.jwt_rsa_public_key,
+            algorithms=[settings.jwt_algorithm],
+            audience=settings.jwt_audience,
+            issuer=settings.jwt_issuer,
+            options={"require": ["exp", "iss", "aud", "jti", "user_id"]},
+        )
     )
 
 
@@ -102,20 +100,23 @@ async def refresh_access_token(  # noqa: C901
         refresh_token = await decode_token(refresh_token)
     except ExpiredSignatureError:
         logger.info("We got expired token %s", refresh_token)
-        raise RefreshTokenExpired()
+        raise TokenExpired()
     except DecodeError:
         logger.info("Cannot decode token %s", refresh_token)
-        raise RefreshTokenInvalid()
+        raise TokenInvalid()
+    except MissingRequiredClaimError as e:
+        logger.info("Missing claim from token %s. Error %s", refresh_token, e)
+        raise TokenInvalid(str(e))
 
-    if (token_type := refresh_token.get("token_type")) != "refresh":
+    if (token_type := refresh_token.token_type) != TokenType.refresh.value:
         logger.info("User used wrong token type '%s' to refresh access token", token_type)
-        raise WrongTokenTypeException()
+        raise WrongTokenType()
 
     try:
-        user_session_uuid = refresh_token["jti"]
+        user_session_uuid = refresh_token.jti
     except KeyError:
         logger.info("Can't find jti claim in refresh token %s", refresh_token)
-        raise RefreshTokenInvalid()
+        raise TokenInvalid()
 
     try:
         user_session = await crud_user_session.get_user_session_by_uuid(
@@ -123,11 +124,11 @@ async def refresh_access_token(  # noqa: C901
         )
     except DataError:
         logger.info("Not valid jti claim format in refresh token %s", refresh_token)
-        raise RefreshTokenNotFound()
+        raise TokenNotFound()
 
     if not user_session:
         logger.info("Can't find user session from refresh token %s", refresh_token)
-        raise RefreshTokenNotFound()
+        raise TokenNotFound()
 
     if request:
         user_session.ip = request.client.host

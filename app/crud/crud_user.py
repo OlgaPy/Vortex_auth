@@ -63,5 +63,5 @@ async def get_by_username(db: Session, username: str) -> User | None:
     return db.query(User).filter(User.username == username).first()
 
 
-async def get_by_uuid(db: Session, user_uuid: uuid.UUID) -> User | None:
+async def get_by_uuid(db: Session, user_uuid: str | uuid.UUID) -> User | None:
     return db.query(User).filter(User.uuid == user_uuid).first()

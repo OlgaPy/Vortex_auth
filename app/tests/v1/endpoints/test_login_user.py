@@ -4,6 +4,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
+from app.core.enums import TokenType
 from app.core.utils.security import decode_token
 from app.main import app
 from app.models.user import User
@@ -54,13 +55,13 @@ class TestLoginUser:
         access_token = await decode_token(response["access_token"])
         refresh_token = await decode_token(response["refresh_token"])
 
-        assert access_token["token_type"] == "access"
-        assert access_token["user_id"] == str(user.uuid)
-        assert access_token["is_active"] == user.is_active
+        assert access_token.token_type == TokenType.access
+        assert access_token.user_id == str(user.uuid)
+        assert access_token.is_active == user.is_active
 
-        assert refresh_token["token_type"] == "refresh"
-        assert refresh_token["user_id"] == str(user.uuid)
-        assert refresh_token["jti"] == str(user.sessions[0].uuid)
+        assert refresh_token.token_type == TokenType.refresh
+        assert refresh_token.user_id == str(user.uuid)
+        assert refresh_token.jti == str(user.sessions[0].uuid)
 
     async def _login(self, data: dict):
         async with AsyncClient(app=app, base_url="http://test") as ac:

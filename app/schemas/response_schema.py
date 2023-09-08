@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.core.enums import TokenType
+
 
 class ErrorDetail(BaseModel):
     """Individual error details."""
@@ -25,7 +27,7 @@ class Token(BaseModel):
     iss: str
     aud: str
     jti: str
-    token_type: str = "access"
+    token_type: TokenType = TokenType.access
     user_id: str
     is_active: bool = False
 
@@ -33,13 +35,13 @@ class Token(BaseModel):
 class AccessToken(Token):
     """Access token."""
 
-    token_type: str = "access"
+    token_type: TokenType = TokenType.access
 
 
 class RefreshToken(Token):
     """Refresh token."""
 
-    token_type: str = "refresh"
+    token_type: TokenType = TokenType.refresh
 
 
 class TokensPair(BaseModel):
