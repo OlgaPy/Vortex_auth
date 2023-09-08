@@ -8,6 +8,11 @@ from redis.asyncio import Redis
 from sqlalchemy.orm import Session
 
 from app import deps
+from app.core.exceptions import (
+    PasswordResetCodeInvalid,
+    PasswordResetException,
+    PasswordResetUserNotFound,
+)
 from app.core.utils.security import (
     fetch_confirmation_code_data,
     generate_jwt_access_token,
@@ -46,10 +51,7 @@ async def confirm(
 ):
     code_data = await fetch_confirmation_code_data(redis, payload.code)
     if not code_data:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Произошла ошибка. Token недействителен!",
-        )
+        raise PasswordResetCodeInvalid()
 
     logger.debug(
         "User %s is found with code_type: %s", code_data.user_uuid, code_data.code_type
@@ -57,10 +59,7 @@ async def confirm(
 
     user = await crud_user.get_by_uuid(db, user_uuid=code_data.user_uuid)
     if not user:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Произошла ошибка. Такого юзера нет в системе!",
-        )
+        raise PasswordResetUserNotFound()
 
     try:
         user_in_update = user_schema.UserPasswordUpdate(
@@ -79,10 +78,7 @@ async def confirm(
             db=db, db_user=user, obj_in=user_in_update
         )
     except Exception:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_GATEWAY,
-            detail="Не удалось обновить пароль пользователя.",
-        )
+        raise PasswordResetException()
 
     await delete_user_sessions(db=db, user=user)
     user_session = await crud_user_session.create_user_session(
@@ -94,6 +90,6 @@ async def confirm(
         uuid=updated_user.uuid,
         username=updated_user.username,
         email=updated_user.email,
-        access_token=await generate_jwt_access_token(user),
+        access_token=await generate_jwt_access_token(user, jti=user_session.uuid),
         refresh_token=await generate_jwt_refresh_token(user=user, jti=user_session.uuid),
     )

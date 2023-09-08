@@ -1,3 +1,4 @@
+import datetime
 import re
 import uuid
 from difflib import SequenceMatcher
@@ -170,3 +171,14 @@ class UserLoginData(BaseModel):
 
     username: constr(strip_whitespace=True) | EmailStr
     password: constr(strip_whitespace=True)
+
+
+class UserSessionOut(BaseModel):
+    """User sessions."""
+
+    model_config = ConfigDict(from_attributes=True)
+    uuid: uuid.UUID
+    ip: str
+    useragent: str | None
+    last_activity: datetime.datetime | None
+    created_at: datetime.datetime

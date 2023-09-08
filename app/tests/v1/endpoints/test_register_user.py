@@ -46,33 +46,35 @@ class TestRegisterUser:
         assert len(user.sessions) == 1
 
     @pytest.mark.parametrize(
-        "username",
+        "username,expected_error_code",
         (
-            "   sh      ",
-            "veryyyloooonguuusername",
-            "wrong!chars",
-            " admin ",
-            "moder ",
-            " moderator",
+            ("   sh      ", "short_username"),
+            ("veryyyloooonguuusername", "long_username"),
+            ("wrong!chars", "wrong_username"),
+            (" admin ", "forbidden_username"),
+            ("moder ", "forbidden_username"),
+            (" moderator", "forbidden_username"),
         ),
     )
-    async def test_register_user_invalid_username(self, db: Session, username):
+    async def test_register_user_invalid_username(self, username, expected_error_code):
         with self.patch_create_user, self.patch_externals:
             result = await self._register({**self.user_data, "username": username})
 
         assert (
             result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         ), result.content.decode()
+        response = result.json()
+        assert response["detail"][0]["type"] == expected_error_code
 
     @pytest.mark.parametrize(
-        "existing_data,expected_error_message",
+        "existing_data,expected_error_type",
         (
-            ("username", "Пользователь с таким логином уже зарегистрирован."),
-            ("email", "Пользователь с таким email уже зарегистрирован."),
+            ("username", "username_exist"),
+            ("email", "user_email_exist"),
         ),
     )
     async def test_register_user_with_existing_data(
-        self, db: Session, existing_data, expected_error_message
+        self, db: Session, existing_data, expected_error_type
     ):
         existing_db_user = User(
             uuid=uuid.uuid4(),
@@ -92,7 +94,7 @@ class TestRegisterUser:
 
         assert result.status_code == HTTPStatus.BAD_REQUEST, result.content.decode()
         response = result.json()
-        assert response["detail"] == expected_error_message
+        assert response["detail"][0]["type"] == expected_error_type
 
     async def test_register_user_monolith_not_responding(self, db: Session):
         with mock.patch(
@@ -102,18 +104,27 @@ class TestRegisterUser:
             result = await self._register(self.user_data)
         assert result.status_code == HTTPStatus.SERVICE_UNAVAILABLE
         response = result.json()
-        assert response["detail"] == "Не удалось зарегистрировать пользователя."
+        assert response["detail"][0]["type"] == "cant_register_user"
         user = await crud_user.get_by_email(db, self.user_data["email"])
         assert user is None
 
-    @pytest.mark.parametrize("email", ("hello@", "@hello", "admin@kapi.bar"))
-    async def test_register_user_wrong_email(self, db: Session, email):
+    @pytest.mark.parametrize(
+        "email,expected_error_type",
+        (
+            ("hello@", "value_error"),
+            ("@hello", "value_error"),
+            ("admin@kapi.bar", "forbidden_email"),
+        ),
+    )
+    async def test_register_user_wrong_email(self, email, expected_error_type):
         with self.patch_create_user, self.patch_externals:
             result = await self._register({**self.user_data, "email": email})
 
         assert (
             result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         ), result.content.decode()
+        response = result.json()
+        assert response["detail"][0]["type"] == expected_error_type
 
     @pytest.mark.parametrize(
         "password,expected_error_type",
@@ -126,9 +137,7 @@ class TestRegisterUser:
             ("Testuser1!", "password_similar"),
         ),
     )
-    async def test_register_user_weak_password(
-        self, db: Session, password, expected_error_type
-    ):
+    async def test_register_user_weak_password(self, password, expected_error_type):
         with self.patch_create_user, self.patch_externals:
             result = await self._register({**self.user_data, "password": password})
 
