@@ -27,7 +27,25 @@ logging.basicConfig(
     format="%(levelname)s %(asctime)s %(name)s %(message)s",
 )
 
-app = FastAPI(title=settings.title, version=settings.version, debug=settings.debug)
+app = FastAPI(
+    title=settings.title,
+    version=settings.version,
+    license_info={
+        "name": "Apache 2.0",
+        "identifier": "Apache-2.0",
+    },
+    openapi_tags=[
+        {"name": "user", "description": "Регистрация и авторизация пользователей"},
+        {"name": "token", "description": "Работа с токенами"},
+        {
+            "name": "code",
+            "description": "Запрос кодов подтверждения для активации аккаунтов",
+        },
+        {"name": "password", "description": "Сброс и смена паролей"},
+        {"name": "session", "description": "Управлениями сессиями пользователей"},
+    ],
+    debug=settings.debug,
+)
 
 app.include_router(router, prefix="/v1")
 
