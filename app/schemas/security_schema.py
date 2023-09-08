@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, constr, model_validator
 from pydantic_core import PydanticCustomError
 from pydantic_core.core_schema import FieldValidationInfo
 
@@ -25,8 +25,8 @@ class RestorePasswordData(BaseModel):
 class ResetPasswordData(BaseModel):
     """Data to be used to reset password."""
 
-    username: Optional[str] = None
-    email: Optional[str] = None
+    username: Optional[constr(strip_whitespace=True)] = None
+    email: Optional[constr(strip_whitespace=True)] = None
 
     @model_validator(mode="after")
     @classmethod
@@ -34,7 +34,7 @@ class ResetPasswordData(BaseModel):
         if not value.email and not value.username:
             raise PydanticCustomError(
                 "missing_field",
-                "Для востановление пароля, требуется ввести username или пароль.",
+                "Для востановления пароля, требуется ввести username или пароль.",
             )
         elif value.email and value.username:
             value.username = None

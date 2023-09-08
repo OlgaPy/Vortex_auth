@@ -16,7 +16,7 @@ from app.core.utils.security import (
 )
 from app.crud import crud_user, crud_user_session
 from app.crud.crud_user_session import delete_user_sessions
-from app.schemas import security_schema, user_schema
+from app.schemas import response_schema, security_schema, user_schema
 from app.schemas.response_schema import HTTPResponse
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ router = APIRouter()
 
 @router.post(
     "/reset",
+    response_model=response_schema.Msg,
     status_code=HTTPStatus.CREATED,
     responses={
         HTTPStatus.CREATED: {
@@ -39,20 +40,23 @@ async def reset(
     db: Session = Depends(deps.get_db),
     redis: Redis = Depends(deps.get_redis),
 ):
-    logger.debug("PAYLOAD %s", payload)
     if payload.username:
         user = await crud_user.get_by_username(db, username=payload.username)
     else:
         user = await crud_user.get_by_email(db, email=payload.email)
 
-    if user:
+    try:
         await generate_and_email_password_reset_instruction(redis, user=user)
-    else:
-        logger.info("The user was not found in the database", payload.username)
+        logger.info(
+            "Password Recover email sent to %s for user %s", user.email, user.username
+        )
+    except Exception:
+        logger.exception("The user %s was not found in the database", payload.email)
 
-    logger.info(
-        "Password Recover email sent to %s for user %s", user.email, user.username
-    )
+    return {
+        "msg": "Ссылка с инструкциями для "
+        "восстановления пароля была выслана на Ваш email."
+    }
 
 
 @router.post(

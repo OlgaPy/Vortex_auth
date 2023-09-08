@@ -28,11 +28,34 @@ class TestPassword:
             "app.v1.endpoints.password.generate_and_email_password_reset_instruction",
         )
 
+    async def test_generate_and_email_confirmation_code(self, caplog):
+        invalid_input = {
+            "user": "not.a.valid.user",
+            "email": "not.a.valid.user@example.com",
+        }
+        with mock.patch(
+            "app.v1.endpoints.password.generate_and_email_password_reset_instruction",
+            side_effect=[None, Exception("Triggers_AttributeError")],
+        ):
+            try:
+                result = await self._password_reset(invalid_input)
+            except Exception as e:
+                assert str(e) == "Triggers_AttributeError"
+
+        response = result.json()
+        assert "was not found in the database" in caplog.text
+        assert (
+            response["msg"] == "Ссылка с инструкциями для "
+            "восстановления пароля была выслана на Ваш email."
+        )
+
     @pytest.mark.parametrize(
         "username,email,response_expected_status_code",
         (
             ("testuser", "testuser@example.com", HTTPStatus.CREATED),
             ("testuser", "", HTTPStatus.CREATED),
+            ("testuser", "not.a.valid.email@yandex.ru", HTTPStatus.CREATED),
+            ("not.a.valid.user", "testuser@example.com", HTTPStatus.CREATED),
             ("", "testuser@example.com", HTTPStatus.CREATED),
         ),
     )
@@ -47,19 +70,34 @@ class TestPassword:
         with self.mock_generate_and_email_confirmation_code:
             result = await self._password_reset({"username": username, "email": email})
         assert result.status_code == response_expected_status_code
+        response = result.json()
+        assert (
+            response["msg"] == "Ссылка с инструкциями для "
+            "восстановления пароля была выслана на Ваш email."
+        )
 
+    @pytest.mark.parametrize(
+        "username,email,response_expected_status_code",
+        (
+            ("kapibara", "kapi@mail.ru", HTTPStatus.CREATED),
+            ("", "", HTTPStatus.UNPROCESSABLE_ENTITY),
+            (" ", " ", HTTPStatus.UNPROCESSABLE_ENTITY),
+        ),
+    )
     async def test_password_reset_invalid_input(
         self,
         db: Session,
+        username,
+        email,
+        response_expected_status_code,
         user: User,
     ):
-        username = ""
-        email = ""
         with self.mock_generate_and_email_confirmation_code:
             result = await self._password_reset({"username": username, "email": email})
-        assert result.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        assert result.status_code == response_expected_status_code
         response = result.json()
-        assert response["detail"][0]["type"] == "missing_field"
+        if not username and not email:
+            assert response["detail"][0]["type"] == "missing_field"
 
     @pytest.mark.parametrize(
         "password,expected_error_type",

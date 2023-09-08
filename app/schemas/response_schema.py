@@ -32,3 +32,9 @@ class RefreshToken(Token):
     """Refresh token."""
 
     token_type: str = "refresh"
+
+
+class Msg(BaseModel):
+    """Response message for various endpoints."""
+
+    msg: str
