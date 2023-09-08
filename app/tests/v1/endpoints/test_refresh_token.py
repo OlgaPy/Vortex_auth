@@ -30,7 +30,8 @@ class TestRefreshToken:
         assert response["refresh_token"] == refresh_token
         assert user_session.last_activity == token_refresh_timestamp
 
-    async def test_cannot_be_refreshed_with_wrong_token_type(self, access_token: str):
+    async def test_cannot_be_refreshed_with_wrong_token_type(self, access_token_and_user):
+        access_token, _ = access_token_and_user
         result = await self._refresh_token(data={"refresh_token": access_token})
         assert result.status_code == HTTPStatus.BAD_REQUEST
         response = result.json()

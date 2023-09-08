@@ -90,6 +90,6 @@ async def confirm(
         uuid=updated_user.uuid,
         username=updated_user.username,
         email=updated_user.email,
-        access_token=await generate_jwt_access_token(user),
+        access_token=await generate_jwt_access_token(user, jti=user_session.uuid),
         refresh_token=await generate_jwt_refresh_token(user=user, jti=user_session.uuid),
     )
