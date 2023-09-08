@@ -28,14 +28,14 @@ class TestPassword:
             "app.v1.endpoints.password.generate_and_email_password_reset_instruction",
         )
 
-    async def test_generate_and_email_confirmation_code(self, caplog):
+    async def test_generate_and_email_confirmation_code(self, db: Session, caplog):
         invalid_input = {
             "user": "not.a.valid.user",
             "email": "not.a.valid.user@example.com",
         }
         with mock.patch(
             "app.v1.endpoints.password.generate_and_email_password_reset_instruction",
-            side_effect=[None, Exception("Triggers_AttributeError")],
+            side_effect=Exception("Triggers_AttributeError"),
         ):
             try:
                 result = await self._password_reset(invalid_input)
