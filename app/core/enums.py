@@ -6,3 +6,10 @@ class ConfirmationCodeType(str, Enum):
 
     email = "email"
     telegram = "telegram"
+
+
+class TokenType(str, Enum):
+    """Enum for token types."""
+
+    access = "access"
+    refresh = "refresh"

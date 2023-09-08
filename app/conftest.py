@@ -9,11 +9,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy_utils import create_database, database_exists
 
 from app.core.settings import settings
-from app.core.utils.security import generate_hashed_password
+from app.core.utils.security import (
+    generate_hashed_password,
+    generate_jwt_access_token,
+    generate_jwt_refresh_token,
+)
 from app.db.base_class import BaseTable
 from app.deps import get_db, get_redis
 from app.main import app
-from app.models.user import User
+from app.models.user import User, UserSession
 from app.tests.data import TestUser
 
 
@@ -73,6 +77,15 @@ def client(db) -> Generator:
 app.dependency_overrides[get_redis] = redis_mock
 
 
+@pytest.fixture(scope="session", autouse=True)
+def settings_fixture(request):
+    settings.jwt_algorithm = "HS256"
+    settings.jwt_rsa_private_key = "test-key"
+    settings.jwt_rsa_public_key = "test-key"
+    settings.jwt_refresh_token_lifetime_days = 1
+    yield
+
+
 @pytest.fixture
 async def user(db):
     db_user = User(
@@ -85,8 +98,17 @@ async def user(db):
     return db_user
 
 
-@pytest.fixture(scope="session", autouse=True)
-def settings_fixture(request):
-    settings.jwt_algorithm = "HS256"
-    settings.jwt_rsa_private_key = "test-key"
-    yield
+@pytest.fixture
+async def refresh_token(db, user: User) -> str:
+    user_session = UserSession(user=user, ip="127.0.0.1", useragent="pytest")
+    db.add(user_session)
+    db.commit()
+    return await generate_jwt_refresh_token(user=user, jti=user_session.uuid)
+
+
+@pytest.fixture
+async def access_token_and_user(db, user: User) -> tuple[str, User]:
+    user_session = UserSession(user=user, ip="127.0.0.1", useragent="pytest")
+    db.add(user_session)
+    db.commit()
+    return await generate_jwt_access_token(user=user, jti=user_session.uuid), user
