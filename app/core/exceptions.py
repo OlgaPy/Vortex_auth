@@ -9,7 +9,7 @@ class KapibaraException(Exception):
     message: str
 
     def __init__(
-        self, error_type: str = None, message: str = None, status_code: int = None
+        self, message: str = None, error_type: str = None, status_code: int = None
     ):
         self.error_type = error_type or self.error_type
         self.message = message or self.message

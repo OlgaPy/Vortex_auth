@@ -106,7 +106,7 @@ async def refresh_access_token(  # noqa: C901
         raise TokenInvalid()
     except MissingRequiredClaimError as e:
         logger.info("Missing claim from token %s. Error %s", refresh_token, e)
-        raise TokenInvalid(str(e))
+        raise TokenInvalid(message=str(e))
 
     if (token_type := refresh_token.token_type) != TokenType.refresh.value:
         logger.info("User used wrong token type '%s' to refresh access token", token_type)

@@ -54,7 +54,7 @@ class TestSession:
 
     @pytest.mark.parametrize("jti", (None, "wrong", uuid.uuid4()))
     @pytest.mark.parametrize("user_id", (None, "random", uuid.uuid4()))
-    async def test_list_sessions_without_user_in_db(self, user_id, jti):
+    async def test_list_sessions_without_user_in_db(self, db, user_id, jti):
         token = dict(
             exp=datetime.datetime.now()
             + datetime.timedelta(days=settings.jwt_refresh_token_lifetime_days),
